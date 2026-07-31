@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
+/* Manual dark mode via a `dark` class on <html>, toggled in JS. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -12,15 +20,169 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Minimal styling for markdown-rendered preview content. */
+.prose-mathnote h1,
+.prose-mathnote h2,
+.prose-mathnote h3,
+.prose-mathnote h4,
+.prose-mathnote h5,
+.prose-mathnote h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.2em 0 0.5em;
+}
+.prose-mathnote h1:first-child,
+.prose-mathnote h2:first-child,
+.prose-mathnote h3:first-child {
+  margin-top: 0;
+}
+.prose-mathnote h1 {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--color-neutral-200, #e5e5e5);
+  padding-bottom: 0.3em;
+}
+.dark .prose-mathnote h1 {
+  border-bottom-color: var(--color-neutral-800, #262626);
+}
+.prose-mathnote h2 {
+  font-size: 1.25em;
+}
+.prose-mathnote h3 {
+  font-size: 1.1em;
+}
+.prose-mathnote p {
+  margin: 0.6em 0;
+}
+.prose-mathnote ul,
+.prose-mathnote ol {
+  margin: 0.6em 0;
+  padding-left: 1.4em;
+}
+.prose-mathnote ul {
+  list-style: disc;
+}
+.prose-mathnote ol {
+  list-style: decimal;
+}
+.prose-mathnote li {
+  margin: 0.2em 0;
+}
+.prose-mathnote strong {
+  font-weight: 600;
+}
+.prose-mathnote .math-display {
+  margin: 0.8em 0;
+  overflow-x: auto;
+  font-size: 1.15em;
+}
+.prose-mathnote .note-block {
+  border: 1px solid var(--color-neutral-300, #d4d4d4);
+  padding: 0.7em 0.9em;
+  margin: 0.9em 0;
+}
+.dark .prose-mathnote .note-block {
+  border-color: var(--color-neutral-700, #404040);
+}
+.prose-mathnote .note-block-title {
+  font-weight: 600;
+  margin-bottom: 0.4em;
+}
+.prose-mathnote .note-block-body > :first-child {
+  margin-top: 0;
+}
+.prose-mathnote .note-block-body > :last-child {
+  margin-bottom: 0;
+}
+.prose-mathnote .math-error {
+  color: #b91c1c;
+  border-bottom: 1px dashed #b91c1c;
+  font-family: var(--font-mono), monospace;
+  cursor: help;
+}
+.dark .prose-mathnote .math-error {
+  color: #f87171;
+  border-bottom-color: #f87171;
+}
+
+/* Browser print-based PDF export: only the preview panel is printed. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-area,
+  #print-area * {
+    visibility: visible !important;
+  }
+  #print-area {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* The on-screen-only page canvas (scroll viewport, centering frame, white
+     paper border/shadow, zoom width) — the printed page IS the paper, via
+     the "@page" size injected in page.tsx, so none of this preview chrome
+     should appear in the PDF output. */
+  .mn-page-viewport {
+    overflow: visible !important;
+    height: auto !important;
+    background: transparent !important;
+  }
+  .mn-page-frame {
+    padding: 0 !important;
+  }
+  .mn-page {
+    width: 100% !important;
+    aspect-ratio: unset !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  /* Compact academic-note sizing for exported PDFs only — screen typography
+     (Editor/Preview font sizes, set inline in their components) is untouched. */
+  .prose-mathnote {
+    font-size: 10.5pt !important;
+    line-height: 1.45 !important;
+  }
+  .prose-mathnote h1 {
+    font-size: 17pt !important;
+  }
+  .prose-mathnote h2 {
+    font-size: 14pt !important;
+  }
+  .prose-mathnote h3 {
+    font-size: 11.5pt !important;
+  }
+  .prose-mathnote p {
+    margin: 0.35em 0 !important;
+  }
+  .prose-mathnote ul,
+  .prose-mathnote ol {
+    margin: 0.35em 0 !important;
+  }
+  .prose-mathnote li {
+    margin: 0.1em 0 !important;
+  }
+  .prose-mathnote .math-display {
+    font-size: 1em !important;
+    margin: 0.5em 0 !important;
+  }
+  .prose-mathnote .katex {
+    font-size: 1em !important;
+  }
 }

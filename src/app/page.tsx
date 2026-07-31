@@ -1,65 +1,101 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import TopBar from "@/components/TopBar";
+import SplitView, { type ViewMode } from "@/components/SplitView";
+import CommandsModal from "@/components/CommandsModal";
+import SuggestionsPanel from "@/components/SuggestionsPanel";
+import { useDarkMode, useIsNarrow, usePageSettings } from "@/components/hooks";
+import { useNoteStorage } from "@/storage/useNoteStorage";
+import { buildPageCssRule, DEFAULT_ZOOM, type Zoom } from "@/config/pageSettings";
 
 export default function Home() {
+  const { title, setTitle, content, setContent, status, hydrated, saveNow } = useNoteStorage();
+  const [viewMode, setViewMode] = useState<ViewMode>("split");
+  const [commandsOpen, setCommandsOpen] = useState(false);
+  const isNarrow = useIsNarrow();
+  const { dark, toggle } = useDarkMode();
+  const { settings: pageSettings, setSize: setPaperSize, setOrientation } = usePageSettings();
+  const [zoom, setZoom] = useState<Zoom>(DEFAULT_ZOOM);
+
+  const exportPdf = useCallback(() => {
+    window.print();
+  }, []);
+
+  // The selected paper size/orientation is runtime (localStorage-persisted)
+  // state, so the "@page" print rule can't live in static CSS — it's
+  // injected as its own <style> tag and kept in sync with pageSettings.
+  useEffect(() => {
+    const styleEl = document.createElement("style");
+    styleEl.textContent = buildPageCssRule(pageSettings);
+    document.head.appendChild(styleEl);
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, [pageSettings]);
+
+  // View/save/export shortcuts operate on app-level state, independent of
+  // which element currently has focus, so they're handled at the window
+  // level (unlike Cmd+B/1/2/3, which need the editor's own selection and are
+  // handled inside Editor.tsx).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!e.metaKey) return;
+
+      if (e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        if (e.shiftKey) setViewMode("preview");
+        else exportPdf();
+        return;
+      }
+      if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
+        if (e.shiftKey) setViewMode("split");
+        else saveNow();
+        return;
+      }
+      if ((e.key === "e" || e.key === "E") && e.shiftKey) {
+        e.preventDefault();
+        setViewMode("editor");
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [exportPdf, saveNow]);
+
+  if (!hydrated) {
+    return <div className="flex-1 bg-white dark:bg-neutral-950" />;
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="flex h-full flex-col bg-white dark:bg-neutral-950">
+      <TopBar
+        title={title}
+        onTitleChange={setTitle}
+        status={status}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        isNarrow={isNarrow}
+        dark={dark}
+        onToggleDark={toggle}
+        onExportPdf={exportPdf}
+        onOpenCommands={() => setCommandsOpen(true)}
+        pageSettings={pageSettings}
+        onPaperSizeChange={setPaperSize}
+        onOrientationChange={setOrientation}
+        zoom={zoom}
+        onZoomChange={setZoom}
+      />
+      <SuggestionsPanel content={content} onChange={setContent} />
+      <SplitView
+        content={content}
+        onChange={setContent}
+        viewMode={viewMode}
+        isNarrow={isNarrow}
+        pageSettings={pageSettings}
+        zoom={zoom}
+      />
+      <CommandsModal open={commandsOpen} onClose={() => setCommandsOpen(false)} />
     </div>
   );
 }

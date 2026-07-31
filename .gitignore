@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev-tool config (per-machine, not project config)
+.claude/
+
+# editor/OS
+.vscode/
+.idea/
