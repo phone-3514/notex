@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  experimental: {
+    // Turbopack's persistent filesystem cache (default-on for dev since
+    // v16.1.0) was going stale against files it hadn't actually changed —
+    // manifesting as random "file is not parseable" / "not a function"
+    // build errors on files (package.json, node_modules/katex, .css) that
+    // were verified byte-for-byte intact on disk. Disabling it trades away
+    // the cross-restart cache speedup for correctness; re-enable only after
+    // confirming a Next.js patch fixes the staleness.
+    turbopackFileSystemCacheForDev: false,
+  },
   // Service worker scripts must never be CDN/browser-cached long-term, or
   // clients can get stuck on a stale sw.js after a deploy.
   async headers() {
