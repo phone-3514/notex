@@ -14,6 +14,7 @@ interface TopBarProps {
   dark: boolean;
   onToggleDark: () => void;
   onExportPdf: () => void;
+  onExportMarkdown: () => void;
   onOpenCommands: () => void;
   pageSettings: PageSettings;
   onPaperSizeChange: (size: PaperSize) => void;
@@ -63,6 +64,7 @@ export default function TopBar({
   dark,
   onToggleDark,
   onExportPdf,
+  onExportMarkdown,
   onOpenCommands,
   pageSettings,
   onPaperSizeChange,
@@ -129,6 +131,14 @@ export default function TopBar({
         className="shrink-0 border border-neutral-300 px-2.5 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500"
       >
         Export PDF
+      </button>
+
+      <button
+        type="button"
+        onClick={onExportMarkdown}
+        className="shrink-0 border border-neutral-300 px-2.5 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500"
+      >
+        Export Markdown
       </button>
 
       <button

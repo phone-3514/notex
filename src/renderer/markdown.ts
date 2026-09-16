@@ -9,8 +9,8 @@ import { noteBlockLabel, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE } from "./noteBloc
 //   - a line starting with exactly "= " (display math)
 //   - a paired "@...@" span (inline math)
 //   - "$$...$$" / "$...$" (legacy, kept for backward compatibility only)
-const DISPLAY_PREFIX_RE = /^= (.*)$/;
-const DISPLAY_LEGACY_RE = /\$\$([\s\S]+?)\$\$/g;
+export const DISPLAY_PREFIX_RE = /^= (.*)$/;
+export const DISPLAY_LEGACY_RE = /\$\$([\s\S]+?)\$\$/g;
 
 function escapeHtml(s: string): string {
   return s
@@ -70,9 +70,9 @@ function renderMath(raw: string, displayMode: boolean): string {
 // branch is delegated to shorthandToLatex individually (same DSL, same
 // precedence rules), so this only needs to own the block-structure and the
 // "\begin{cases}" assembly — not a second math grammar.
-const CASES_OPEN_RE = /^(.*)=cases\s*$/;
+export const CASES_OPEN_RE = /^(.*)=cases\s*$/;
 
-function buildCasesLatex(prefixExpr: string, branchLines: string[]): string {
+export function buildCasesLatex(prefixExpr: string, branchLines: string[]): string {
   const prefix = prefixExpr.trim();
   const prefixLatex = prefix ? `${shorthandToLatex(prefix)}=` : "";
   if (branchLines.length < 2) {
@@ -115,10 +115,10 @@ function renderCasesBlock(prefixExpr: string, branchLines: string[], hasEnd: boo
 // cases above, opened by a keyword on its own "= " line and closed by a line
 // that is exactly "end". Matrix blocks additionally accept an optional
 // "<prefix>=" before the keyword (e.g. "A=matrix"); align does not.
-const ALIGN_OPEN_RE = /^align\s*$/;
-const MATRIX_OPEN_RE = /^(?:(.*)=)?(matrix|pmatrix|bmatrix|vmatrix)\s*$/;
+export const ALIGN_OPEN_RE = /^align\s*$/;
+export const MATRIX_OPEN_RE = /^(?:(.*)=)?(matrix|pmatrix|bmatrix|vmatrix)\s*$/;
 
-function buildAlignLatex(rows: string[]): string {
+export function buildAlignLatex(rows: string[]): string {
   if (rows.length === 0) {
     throw new Error("An align block needs at least one row");
   }
@@ -191,7 +191,7 @@ function renderMatrixCell(node: MathNode): string {
   return nodeToLatex(node);
 }
 
-function buildMatrixLatex(kind: string, prefixExpr: string, rows: string[]): string {
+export function buildMatrixLatex(kind: string, prefixExpr: string, rows: string[]): string {
   const env = MATRIX_ENV[kind];
   if (rows.length === 0) {
     throw new Error(`A ${kind} block needs at least one row`);
@@ -225,7 +225,7 @@ function renderMatrixBlock(kind: string, prefixExpr: string, rows: string[], has
 // Shared row-collection for align/matrix blocks: consume lines through a
 // line that is exactly "end" (or to the end of the chunk, non-crashing),
 // dropping blank lines. Mirrors the cases-block collection above.
-function collectBlockRows(lines: string[], start: number): { rows: string[]; hasEnd: boolean; endIdx: number } {
+export function collectBlockRows(lines: string[], start: number): { rows: string[]; hasEnd: boolean; endIdx: number } {
   let i = start;
   while (i < lines.length && lines[i].trim() !== "end") {
     i++;
@@ -325,9 +325,9 @@ function renderInline(text: string): string {
   return out;
 }
 
-const UNORDERED_RE = /^[-*+]\s+(.*)$/;
-const ORDERED_RE = /^\d+\.\s+(.*)$/;
-const HEADING_RE = /^(#{1,6})\s+(.*)$/;
+export const UNORDERED_RE = /^[-*+]\s+(.*)$/;
+export const ORDERED_RE = /^\d+\.\s+(.*)$/;
+export const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 
 // `baseLine` is the 0-indexed source line the chunk starts at, so every
 // emitted block can be tagged with `data-src-line` — the anchor the preview

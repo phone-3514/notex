@@ -8,6 +8,8 @@ import SuggestionsPanel from "@/components/SuggestionsPanel";
 import { useDarkMode, useIsNarrow, usePageSettings } from "@/components/hooks";
 import { useNoteStorage } from "@/storage/useNoteStorage";
 import { buildPageCssRule, DEFAULT_ZOOM, type Zoom } from "@/config/pageSettings";
+import { noteToMarkdown } from "@/renderer/exportMarkdown";
+import { downloadTextFile, sanitizeFilename } from "@/renderer/downloadFile";
 
 export default function Home() {
   const { title, setTitle, content, setContent, status, hydrated, saveNow } = useNoteStorage();
@@ -21,6 +23,14 @@ export default function Home() {
   const exportPdf = useCallback(() => {
     window.print();
   }, []);
+
+  // Independent of the PDF path (no shared code beyond shorthandToLatex) —
+  // a plain-text Markdown file for feeding into an LLM, unaffected by the
+  // print pipeline's text-layer/reading-order quirks.
+  const exportMarkdown = useCallback(() => {
+    const markdown = noteToMarkdown(content);
+    downloadTextFile(`${sanitizeFilename(title)}.md`, markdown, "text/markdown");
+  }, [content, title]);
 
   // The selected paper size/orientation is runtime (localStorage-persisted)
   // state, so the "@page" print rule can't live in static CSS — it's
@@ -79,6 +89,7 @@ export default function Home() {
         dark={dark}
         onToggleDark={toggle}
         onExportPdf={exportPdf}
+        onExportMarkdown={exportMarkdown}
         onOpenCommands={() => setCommandsOpen(true)}
         pageSettings={pageSettings}
         onPaperSizeChange={setPaperSize}
