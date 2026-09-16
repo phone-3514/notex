@@ -117,7 +117,7 @@ class Parser {
   }
 
   private startsFactor(t: Token): boolean {
-    if (t.type === "NUMBER" || t.type === "IDENT") return true;
+    if (t.type === "NUMBER" || t.type === "IDENT" || t.type === "LITERAL") return true;
     if (t.type === "SYMBOL" && (t.value === "(" || t.value === ":")) return true;
     if (t.type === "SYMBOL" && t.value === "|" && this.absDepth === 0) return true;
     return false;
@@ -194,6 +194,13 @@ class Parser {
       return this.parseIdentAtom();
     }
 
+    // "\"-escaped literal (see tokenize.ts): the raw letters, no dictionary
+    // lookup and no compact-subscript heuristics applied.
+    if (t.type === "LITERAL") {
+      this.next();
+      return { kind: "Sym", name: t.value };
+    }
+
     throw new MathSyntaxError(
       t.type === "EOF" ? "Unexpected end of expression" : `Unexpected token "${t.value}"`,
       t.pos
@@ -254,6 +261,8 @@ class Parser {
         case "vec":
         case "colvec":
           return this.parseVector(word);
+        case "bf":
+          return this.parseBold();
       }
     }
 
@@ -355,6 +364,13 @@ class Parser {
 
   private parseSqrt(): MathNode {
     return { kind: "Sqrt", arg: this.unwrapGroup(this.parseAtom()) };
+  }
+
+  // bf(x) / bf x: boldface notation (\boldsymbol) — the non-arrow alternative
+  // to vec(x) that university-level linear algebra/analysis notes need for
+  // vectors and matrices (e.g. "bf(v)", bold Greek letters like "bf(alpha)").
+  private parseBold(): MathNode {
+    return { kind: "Bold", arg: this.unwrapGroup(this.parseAtom()) };
   }
 
   // vec(a,b,c) / colvec(a,b,c): reuses parseParenGroup's comma-list parsing.

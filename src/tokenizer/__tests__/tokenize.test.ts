@@ -94,4 +94,20 @@ describe("tokenize", () => {
   it("does not tokenize a bare '.' outside a decimal or 's.t.'", () => {
     expect(() => tokenize("a.b")).toThrow(MathSyntaxError);
   });
+
+  it('tokenizes a "\\"-escaped letter-run as a single LITERAL token', () => {
+    expect(tokenize("\\N").map((t) => [t.type, t.value])).toEqual([
+      ["LITERAL", "N"],
+      ["EOF", ""],
+    ]);
+    expect(tokenize("\\log").map((t) => [t.type, t.value])).toEqual([
+      ["LITERAL", "log"],
+      ["EOF", ""],
+    ]);
+  });
+
+  it('throws MathSyntaxError on a trailing "\\" with no letter after it', () => {
+    expect(() => tokenize("\\")).toThrow(MathSyntaxError);
+    expect(() => tokenize("\\1")).toThrow(MathSyntaxError);
+  });
 });

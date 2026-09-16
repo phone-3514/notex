@@ -79,6 +79,23 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
+    // A "\"-escaped letter-run (e.g. "\N", "\log") always renders as its bare
+    // letters, skipping every dictionary lookup — the escape hatch for the
+    // (common, since single/double letters are reserved for blackboard sets
+    // and function names) case where a shorthand meaning isn't wanted, e.g.
+    // "N" (sample size) instead of "\mathbb{N}".
+    if (ch === "\\") {
+      const start = i;
+      i++;
+      let raw = "";
+      while (i < n && isLetter(input[i])) raw += input[i++];
+      if (raw.length === 0) {
+        throw new MathSyntaxError('Expected a letter after "\\" (e.g. "\\N")', start);
+      }
+      tokens.push({ type: "LITERAL", value: raw, pos: start });
+      continue;
+    }
+
     // "s.t." ("such that") is special-cased as a literal 4-character match:
     // "." isn't otherwise a valid math-shorthand character (it only appears
     // inside decimal numbers), so it can't be tokenized by the normal

@@ -21,11 +21,44 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// Chrome's print-to-PDF backend writes the text of any CSS-positioned
+// element (position:relative/absolute — which KaTeX's HTML output relies on
+// internally for virtually every non-trivial construct: fractions, roots,
+// sub/superscripts, the accessibility MathML tree) to the *end* of its
+// stacking context in the PDF's content stream, regardless of where it sits
+// on the page (verified directly: a plain `position:relative` span always
+// ends up last in the extracted text, even though it's positioned correctly
+// on screen). That's the actual cause of the reported bug — it's not
+// specific to Japanese text, KaTeX's DOM structure, or the OCR/AI layer,
+// which Notex doesn't have — it's Chromium's print pipeline reordering any
+// positioned run's text relative to plain in-flow text (like normal prose)
+// in the same block. Naive/"raw" text extraction (many simple PDF-to-text
+// tools, e.g. PyPDF2/pypdf, and evidently whatever tool produced the
+// scrambled example in the bug report) walk that content stream in order and
+// see prose first, then every formula on the page clumped together
+// afterward; geometry-reconstructing extractors (poppler's default/-layout
+// modes) largely paper over it already.
+//
+// `output: "html"` drops the (also position:absolute, also always-last)
+// MathML accessibility tree, which was never visible on screen (KaTeX hides
+// it with a 1x1 clip) and only added a second, redundant out-of-order copy.
+// The raw TeX source is then placed as an ordinary (non-positioned) inline
+// run right next to the visual rendering — a plain run's text is never
+// reordered — so a "raw" extractor now reads it exactly where it visually
+// sits. It stays invisible (`display:none` normally, `color:transparent`
+// only under @media print — see globals.css) and print-only, so on-screen
+// layout, selection, and copy/paste are unaffected either way.
+function renderKatex(latex: string, displayMode: boolean): string {
+  const visual = katex.renderToString(latex, { throwOnError: true, displayMode, output: "html" });
+  const fallback = `<span class="katex-pdf-text" aria-hidden="true">${escapeHtml(latex)}</span>`;
+  return `${fallback}${visual}`;
+}
+
 function renderMath(raw: string, displayMode: boolean): string {
   const trimmed = raw.trim();
   try {
     const latex = shorthandToLatex(trimmed);
-    return katex.renderToString(latex, { throwOnError: true, displayMode });
+    return renderKatex(latex, displayMode);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Invalid math syntax";
     const tag = displayMode ? "div" : "span";
@@ -71,7 +104,7 @@ function renderCasesBlock(prefixExpr: string, branchLines: string[], hasEnd: boo
       throw new Error('Missing "end" to close the cases block');
     }
     const latex = buildCasesLatex(prefixExpr, branchLines);
-    return katex.renderToString(latex, { throwOnError: true, displayMode: true });
+    return renderKatex(latex, true);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Invalid cases syntax";
     return `<div class="math-error" title="${escapeHtml(message)}">${escapeHtml(rawText)}</div>`;
@@ -118,7 +151,7 @@ function renderAlignBlock(rows: string[], hasEnd: boolean, rawText: string): str
       throw new Error('Missing "end" to close the align block');
     }
     const latex = buildAlignLatex(rows);
-    return katex.renderToString(latex, { throwOnError: true, displayMode: true });
+    return renderKatex(latex, true);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Invalid align syntax";
     return `<div class="math-error" title="${escapeHtml(message)}">${escapeHtml(rawText)}</div>`;
@@ -182,7 +215,7 @@ function renderMatrixBlock(kind: string, prefixExpr: string, rows: string[], has
       throw new Error(`Missing "end" to close the ${kind} block`);
     }
     const latex = buildMatrixLatex(kind, prefixExpr, rows);
-    return katex.renderToString(latex, { throwOnError: true, displayMode: true });
+    return renderKatex(latex, true);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Invalid matrix syntax";
     return `<div class="math-error" title="${escapeHtml(message)}">${escapeHtml(rawText)}</div>`;

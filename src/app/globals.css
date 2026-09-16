@@ -115,10 +115,34 @@ body {
   border-bottom-color: #f87171;
 }
 
+/* Invisible, non-positioned raw-TeX-source companion to each rendered
+   formula (see renderKatex in renderer/markdown.ts) — irrelevant on screen,
+   so hidden outright here; only @media print below turns it into real
+   (but transparent) text, which is what keeps PDF text extraction in
+   reading order. */
+.prose-mathnote .katex-pdf-text {
+  display: none;
+}
+
 /* Browser print-based PDF export: only the preview panel is printed. */
 @media print {
   body * {
     visibility: hidden;
+  }
+  /* See the "Invisible, non-positioned raw-TeX-source companion" comment
+     above: a real (non-positioned) inline run, so it can't be reordered by
+     Chrome's print pipeline the way the positioned .katex rendering next to
+     it is — just invisible, via transparent ink rather than display:none,
+     so it still emits real, correctly-placed text into the PDF. */
+  .prose-mathnote .katex-pdf-text {
+    display: inline;
+    color: transparent;
+    /* Real (positive) font-size, or the run is dropped from the PDF's text
+       layer entirely instead of just being invisible — but a fraction of a
+       point keeps its rendered footprint (and therefore any effect on line
+       wrapping) imperceptible, since it's the raw TeX source and always
+       longer than the glyphs it stands in for. */
+    font-size: 0.1px;
   }
   #print-area,
   #print-area * {

@@ -177,6 +177,49 @@ describe("renderMarkdownToHtml", () => {
     });
   });
 
+  describe("PDF text-extraction reading order (katex-pdf-text companion span)", () => {
+    // Chrome's print-to-PDF writes the text of any CSS-positioned element to
+    // the *end* of its stacking context, and KaTeX's HTML rendering is
+    // position:relative/absolute internally for almost everything — so a
+    // formula's visible glyphs always land after the surrounding prose in a
+    // naively-extracted PDF, no matter where they sit on the page. A plain
+    // (non-positioned) span holding the raw TeX source, placed immediately
+    // before the visual rendering, isn't subject to that reordering, so an
+    // extractor sees it exactly where the formula visually sits.
+    it("places a non-positioned raw-TeX companion span immediately before each formula", () => {
+      const html = renderMarkdownToHtml("実数値関数 @f,g : N to R@ に対し");
+      const match = html.match(/<span class="katex-pdf-text" aria-hidden="true">([^<]*)<\/span><span class="katex">/);
+      expect(match).not.toBeNull();
+      expect(match![1]).toBe("f,\\;g:\\mathbb{N}\\to\\mathbb{R}");
+    });
+
+    it("HTML-escapes the raw TeX source inside the companion span", () => {
+      const html = renderMarkdownToHtml("@a<b@");
+      expect(html).toContain('<span class="katex-pdf-text" aria-hidden="true">a\\ &lt;\\ b</span>');
+    });
+
+    it("does not emit KaTeX's MathML tree (redundant now, and itself positioned/reordered)", () => {
+      const html = renderMarkdownToHtml("@f(n)@");
+      expect(html).not.toContain("katex-mathml");
+    });
+
+    it("adds the companion span to display math and cases/align/matrix blocks too", () => {
+      expect(renderMarkdownToHtml("= x^2")).toContain('class="katex-pdf-text"');
+      const cases = renderMarkdownToHtml("= y=cases\nx, x>0\n-x, x<=0\nend");
+      expect(cases).toContain('class="katex-pdf-text"');
+      const align = renderMarkdownToHtml("= align\nx=1\n= y=2\nend");
+      expect(align).toContain('class="katex-pdf-text"');
+      const matrix = renderMarkdownToHtml("= matrix\na, b\nc, d\nend");
+      expect(matrix).toContain('class="katex-pdf-text"');
+    });
+
+    it("a malformed span still falls back to math-error, with no companion span", () => {
+      const html = renderMarkdownToHtml("bad @1/@ math");
+      expect(html).toContain("math-error");
+      expect(html).not.toContain("katex-pdf-text");
+    });
+  });
+
   describe("legacy ':...:' and '\\...\\' delimiters are no longer math signals", () => {
     it("renders old ':...:' notes as plain text, not math, without crashing", () => {
       expect(() => renderMarkdownToHtml("任意の :eps>0: に対して")).not.toThrow();

@@ -150,6 +150,7 @@ export const STRUCTURAL_KEYWORDS = new Set([
   "exists",
   "vec",
   "colvec",
+  "bf",
 ]);
 
 export const RELATION_SYMBOLS: Record<string, string> = {

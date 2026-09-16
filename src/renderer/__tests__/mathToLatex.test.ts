@@ -160,6 +160,18 @@ describe("shorthandToLatex — general expression DSL (quantifiers, membership, 
     expect(shorthandToLatex("QQ")).toBe("\\mathbb{Q}");
   });
 
+  it('"\\" escapes a letter-run out of blackboard/function/Greek shorthand', () => {
+    expect(shorthandToLatex("\\N")).toBe("N");
+    expect(shorthandToLatex("\\NN")).toBe("NN");
+    expect(shorthandToLatex("\\log")).toBe("log");
+    expect(shorthandToLatex("\\alpha")).toBe("alpha");
+  });
+
+  it("log with an explicit base composes from the plain subscript operator", () => {
+    expect(shorthandToLatex("log_10(100)")).toBe("\\log_{10}(100)");
+    expect(shorthandToLatex("log_2 x")).toBe("\\log_{2}x");
+  });
+
   it("absolute value (bars themselves stay tight; a trailing comparison is spaced)", () => {
     expect(shorthandToLatex("|x|")).toBe("\\lvert x\\rvert");
     expect(shorthandToLatex("|an-A|")).toBe("\\lvert a_{n}-A\\rvert");
@@ -386,6 +398,25 @@ describe("shorthandToLatex — vectors", () => {
 
   it("every vector example produces LaTeX that KaTeX actually accepts", () => {
     const examples = ["vec(a)", "vec(a,b,c)", "colvec(a,b,c)", "colvec(a)"];
+    for (const example of examples) {
+      const latex = shorthandToLatex(example);
+      expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();
+    }
+  });
+
+  it("bf(x) renders boldsymbol — the non-arrow vector notation", () => {
+    expect(shorthandToLatex("bf(v)")).toBe("\\boldsymbol{v}");
+    expect(shorthandToLatex("bf v")).toBe("\\boldsymbol{v}");
+  });
+
+  it("bf composes with the rest of the DSL (Greek letters, subscripts, whole expressions)", () => {
+    expect(shorthandToLatex("bf(alpha)")).toBe("\\boldsymbol{\\alpha}");
+    expect(shorthandToLatex("bf(x)_1")).toBe("\\boldsymbol{x}_{1}");
+    expect(shorthandToLatex("bf(x+y)")).toBe("\\boldsymbol{x+y}");
+  });
+
+  it("every bf example produces LaTeX that KaTeX actually accepts", () => {
+    const examples = ["bf(v)", "bf v", "bf(alpha)", "bf(x)_1", "bf(x+y)"];
     for (const example of examples) {
       const latex = shorthandToLatex(example);
       expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();

@@ -51,6 +51,11 @@ const STRUCTURAL_ROWS: CommandRow[] = [
   mathRow("vec(x) (arrow vector)", "vec(a)", "Vectors"),
   mathRow("vec(x,y,...) (row vector)", "vec(a,b,c)", "Vectors"),
   mathRow("colvec(x,y,...) (column vector)", "colvec(a,b,c)", "Vectors"),
+  mathRow("bf(x) (bold vector/matrix, no arrow)", "bf(v)", "Vectors"),
+  // "\X" escapes a letter-run out of every shorthand meaning (blackboard
+  // sets, function names, Greek letters, compact subscripts) — e.g. plain
+  // "N" is always \mathbb{N}, so a literal capital N needs "\N".
+  mathRow('\\X (literal escape, e.g. "\\N")', "\\N", "Symbols"),
 ];
 
 // Relational operators: the two-char ones (<=, >=, !=) are rendered as LaTeX
@@ -69,6 +74,13 @@ const BLACKBOARD_ROWS: CommandRow[] = Object.keys(BLACKBOARD_LETTERS).map((key) 
 );
 
 const FUNCTION_ROWS: CommandRow[] = FUNCTION_NAMES.map((name) => mathRow(name, `${name}x`, "Functions"));
+
+// Not a dedicated command: "log" is a plain FUNCTION_NAME like any other, and
+// "_" is the general subscript operator (see STRUCTURAL_ROWS above) — the two
+// already compose, so a log with an explicit base is just "log" immediately
+// followed by "_<base>". Listed explicitly here since that composition isn't
+// obvious from the "log" row alone (which only shows the natural-log form).
+const LOG_BASE_ROW: CommandRow[] = [mathRow("log_b(x) (log with an explicit base)", "log_10(100)", "Functions")];
 
 // forall/exists are structural keywords (handled above with a richer
 // example); everything else in WORD_KEYWORDS is a plain symbol lookup.
@@ -161,6 +173,7 @@ export const COMMAND_ROWS: CommandRow[] = [
   ...GREEK_ROWS,
   ...BLACKBOARD_ROWS,
   ...FUNCTION_ROWS,
+  ...LOG_BASE_ROW,
   ...WORD_KEYWORD_ROWS,
   ...SNIPPET_ROWS,
   ...NOTE_SNIPPET_ROWS,

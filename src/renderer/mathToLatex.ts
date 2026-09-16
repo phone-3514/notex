@@ -86,6 +86,8 @@ export function nodeToLatex(node: MathNode): string {
       return `${nodeToLatex(node.base)}_${braces(nodeToLatex(node.sub))}`;
     case "Sqrt":
       return `\\sqrt${braces(nodeToLatex(node.arg))}`;
+    case "Bold":
+      return `\\boldsymbol${braces(nodeToLatex(node.arg))}`;
     case "Func": {
       const name = `\\${node.name}`;
       return node.arg ? joinTight([name, nodeToLatex(node.arg)]) : name;

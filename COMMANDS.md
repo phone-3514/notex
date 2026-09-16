@@ -197,6 +197,14 @@ Intentionally unsupported / ambiguous forms:
 | `vec(x) (arrow vector)` | \vec{a} | `\vec{a}` | `vec(a)` |
 | `vec(x,y,...) (row vector)` | \begin{pmatrix}a & b & c\end{pmatrix} | `\begin{pmatrix}a & b & c\end{pmatrix}` | `vec(a,b,c)` |
 | `colvec(x,y,...) (column vector)` | \begin{pmatrix}a\\b\\c\end{pmatrix} | `\begin{pmatrix}a\\b\\c\end{pmatrix}` | `colvec(a,b,c)` |
+| `bf(x) (bold vector/matrix, no arrow)` | \boldsymbol{v} | `\boldsymbol{v}` | `bf(v)` |
+
+## Symbols
+
+| Command | Result | LaTeX | Example |
+| --- | --- | --- | --- |
+| `\X (literal escape, e.g. "\N")` | N | `N` | `\N` |
+| `...` | \ldots | `\ldots` | `...` |
 
 ## Relations
 
@@ -302,6 +310,7 @@ Intentionally unsupported / ambiguous forms:
 | `max` | \max x | `\max x` | `maxx` |
 | `sup` | \sup x | `\sup x` | `supx` |
 | `inf` | \inf x | `\inf x` | `infx` |
+| `log_b(x) (log with an explicit base)` | \log_{10}(100) | `\log_{10}(100)` | `log_10(100)` |
 
 ## Operators
 
@@ -352,12 +361,6 @@ Intentionally unsupported / ambiguous forms:
 | `cdots` | \cdots | `\cdots` | `cdots` |
 | `vdots` | \vdots | `\vdots` | `vdots` |
 | `ddots` | \ddots | `\ddots` | `ddots` |
-
-## Symbols
-
-| Command | Result | LaTeX | Example |
-| --- | --- | --- | --- |
-| `...` | \ldots | `\ldots` | `...` |
 
 ## Autocomplete Snippet
 

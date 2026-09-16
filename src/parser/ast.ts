@@ -9,6 +9,7 @@ export type MathNode =
   | { kind: "Pow"; base: MathNode; exp: MathNode }
   | { kind: "Sub"; base: MathNode; sub: MathNode }
   | { kind: "Sqrt"; arg: MathNode }
+  | { kind: "Bold"; arg: MathNode } // bf(x): boldface vector/matrix notation (\boldsymbol), the non-arrow alternative to vec(x)
   | { kind: "Func"; name: string; arg: MathNode | null }
   | { kind: "Differential"; variable: string }
   | {
