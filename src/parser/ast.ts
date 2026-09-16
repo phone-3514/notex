@@ -10,11 +10,12 @@ export type MathNode =
   | { kind: "Sub"; base: MathNode; sub: MathNode }
   | { kind: "Sqrt"; arg: MathNode }
   | { kind: "Bold"; arg: MathNode } // bf(x): boldface vector/matrix notation (\boldsymbol), the non-arrow alternative to vec(x)
+  | { kind: "Overline"; arg: MathNode } // closure(x): topological/algebraic closure, conjugate, etc. (\overline)
   | { kind: "Func"; name: string; arg: MathNode | null }
   | { kind: "Differential"; variable: string }
   | {
       kind: "BigOp";
-      op: "sum" | "prod" | "int";
+      op: "sum" | "prod" | "int" | "bigcup" | "bigcap";
       sub: MathNode | null;
       sup: MathNode | null;
       body: MathNode;
@@ -35,4 +36,6 @@ export type MathNode =
   | { kind: "Prime"; base: MathNode; count: number } // f'(x), f''(x), (f+g)'(x)
   | { kind: "Relation"; op: string; left: MathNode; right: MathNode }
   | { kind: "AbsoluteValue"; arg: MathNode } // |...|
+  | { kind: "SetLiteral"; items: MathNode[] } // {a,b,c} / {} — a finite/literal set
+  | { kind: "SetBuilder"; variable: MathNode; condition: MathNode } // {x | cond} / {x : cond}
   | { kind: "Sequence"; items: MathNode[] }; // comma-separated clauses, e.g. quantifier chains

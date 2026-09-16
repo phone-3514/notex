@@ -25,6 +25,15 @@ function mathBlockSnippet(trigger: string, keyword: string): NoteSnippet {
   return { trigger, expansion: `${open}\n\nend`, cursorOffset: open.length + 1 };
 }
 
+// Inserts a ":::box <title>\n\n:::" custom-named block (see
+// renderer/noteBlocks.ts's "box" type) — unlike noteBlockSnippet's fixed
+// theorem/definition/etc. types, the cursor lands right after "box " so the
+// user can type their own title before moving down to the body.
+function customBoxSnippet(trigger: string): NoteSnippet {
+  const open = ":::box ";
+  return { trigger, expansion: `${open}\n\n:::`, cursorOffset: open.length };
+}
+
 export const NOTE_SNIPPETS: NoteSnippet[] = [
   noteBlockSnippet(";thm", "theorem"),
   noteBlockSnippet(";def", "definition"),
@@ -34,6 +43,7 @@ export const NOTE_SNIPPETS: NoteSnippet[] = [
   noteBlockSnippet(";proof", "proof"),
   noteBlockSnippet(";rem", "remark"),
   noteBlockSnippet(";ex", "example"),
+  customBoxSnippet(";box"),
   { trigger: ";pf", expansion: "## 証明" },
   { trigger: ";remark", expansion: "## 注意" },
   { trigger: ";qed", expansion: "□" },

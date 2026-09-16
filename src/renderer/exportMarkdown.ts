@@ -35,7 +35,7 @@ import {
   buildMatrixLatex,
   collectBlockRows,
 } from "./markdown";
-import { noteBlockLabel, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE } from "./noteBlocks";
+import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE } from "./noteBlocks";
 
 function inlineMath(latex: string): string {
   return `$${latex}$`;
@@ -160,9 +160,8 @@ function exportMarkdownBlocks(chunk: string): string {
     // (recursed through this same function, so headings/lists/math inside it
     // all still work).
     const blockOpen = NOTE_BLOCK_OPEN_RE.exec(line);
-    const label = blockOpen ? noteBlockLabel(blockOpen[1]) : undefined;
-    if (blockOpen && label) {
-      const titleSuffix = blockOpen[2]?.trim();
+    const title = blockOpen ? resolveNoteBlockTitle(blockOpen[1], blockOpen[2]?.trim()) : undefined;
+    if (blockOpen && title) {
       i++;
       const bodyStart = i;
       while (i < lines.length && lines[i].trim() !== NOTE_BLOCK_CLOSE) {
@@ -170,7 +169,6 @@ function exportMarkdownBlocks(chunk: string): string {
       }
       const bodyLines = lines.slice(bodyStart, i);
       if (i < lines.length) i++;
-      const title = titleSuffix ? `${label} ${titleSuffix}` : label;
       out.push(`**${title}.**`);
       out.push("");
       out.push(exportMarkdownBlocks(bodyLines.join("\n")));

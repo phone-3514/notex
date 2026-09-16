@@ -2,7 +2,7 @@ export type TokenType =
   | "NUMBER"
   | "IDENT"
   | "LITERAL" // "\"-escaped letter-run: renders as-is, bypassing every dictionary lookup
-  | "SYMBOL" // single-char structural symbols: ( ) ^ _ + - * / , !
+  | "SYMBOL" // single-char structural symbols: ( ) { } ^ _ + - * / , !
   | "RELOP" // = < > <= >= !=
   | "ARROW" // ->
   | "TILDE" // ~ (bounds separator for sum/int)

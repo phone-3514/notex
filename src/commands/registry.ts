@@ -52,10 +52,19 @@ const STRUCTURAL_ROWS: CommandRow[] = [
   mathRow("vec(x,y,...) (row vector)", "vec(a,b,c)", "Vectors"),
   mathRow("colvec(x,y,...) (column vector)", "colvec(a,b,c)", "Vectors"),
   mathRow("bf(x) (bold vector/matrix, no arrow)", "bf(v)", "Vectors"),
+  mathRow("closure(x) (topological/algebraic closure, conjugate)", "closure(A)", "Sets"),
   // "\X" escapes a letter-run out of every shorthand meaning (blackboard
   // sets, function names, Greek letters, compact subscripts) — e.g. plain
   // "N" is always \mathbb{N}, so a literal capital N needs "\N".
   mathRow('\\X (literal escape, e.g. "\\N")', "\\N", "Symbols"),
+  mathRow("bigcup", "bigcup n=1~oo An", "Sets"),
+  mathRow("bigcap", "bigcap n=1~oo An", "Sets"),
+  mathRow("{a,b,c} (literal set)", "{1,2,3}", "Sets"),
+  mathRow("{} (empty set literal)", "{}", "Sets"),
+  mathRow("{x | cond} (set-builder)", "{x | x>0}", "Sets"),
+  mathRow("{x : cond} (set-builder, alternate spelling)", "{x : x>0}", "Sets"),
+  mathRow('a|b (infix "given"/"divides" — not absolute value)', "a|b", "Relations"),
+  mathRow("P(A|B) (conditional probability)", "P(A|B)", "Relations"),
 ];
 
 // Relational operators: the two-char ones (<=, >=, !=) are rendered as LaTeX
@@ -128,6 +137,61 @@ const WORD_KEYWORD_CATEGORY: Record<string, string> = {
   st: "Logic",
   "s.t.": "Logic",
   gets: "Arrows",
+
+  // Set theory.
+  varnothing: "Sets",
+  nsubseteq: "Sets",
+  nsupseteq: "Sets",
+  subsetneq: "Sets",
+  supsetneq: "Sets",
+  aleph: "Sets",
+
+  // Order theory / lattices (also used for topology's product/quotient order).
+  top: "Order Theory",
+  bot: "Order Theory",
+  prec: "Order Theory",
+  preceq: "Order Theory",
+  succ: "Order Theory",
+  succeq: "Order Theory",
+  ll: "Order Theory",
+  gg: "Order Theory",
+  sqsubset: "Order Theory",
+  sqsubseteq: "Order Theory",
+  sqsupset: "Order Theory",
+  sqsupseteq: "Order Theory",
+
+  // Algebra (direct sums/products, group theory) — "circ" also composes with
+  // "^" for interior notation, e.g. "A^circ".
+  oplus: "Algebra",
+  otimes: "Algebra",
+  ominus: "Algebra",
+  odot: "Algebra",
+  wr: "Algebra",
+  bullet: "Algebra",
+  star: "Algebra",
+  ast: "Algebra",
+  sqcup: "Algebra",
+  sqcap: "Algebra",
+  circ: "Algebra",
+
+  // Proof/model theory.
+  vdash: "Logic",
+  dashv: "Logic",
+  models: "Logic",
+  Vdash: "Logic",
+
+  // Arrows beyond "to"/"mapsto"/"gets".
+  hookrightarrow: "Arrows",
+  twoheadrightarrow: "Arrows",
+  Rightarrow: "Arrows",
+  Leftarrow: "Arrows",
+  Leftrightarrow: "Arrows",
+
+  // Relations beyond the RELATION_SYMBOLS table.
+  propto: "Relations",
+  simeq: "Relations",
+  mid: "Relations",
+  nmid: "Relations",
 };
 
 const WORD_KEYWORD_ROWS: CommandRow[] = Object.keys(WORD_KEYWORDS)

@@ -179,6 +179,13 @@ Intentionally unsupported / ambiguous forms:
 | Command | Result | LaTeX | Example |
 | --- | --- | --- | --- |
 | `Mn(R)` | M_{n}(\mathbb{R}) | `M_{n}(\mathbb{R})` | `Mn(R)` |
+| `closure(x) (topological/algebraic closure, conjugate)` | \overline{A} | `\overline{A}` | `closure(A)` |
+| `bigcup` | \bigcup_{n=1}^{\infty}A_{n} | `\bigcup_{n=1}^{\infty}A_{n}` | `bigcup n=1~oo An` |
+| `bigcap` | \bigcap_{n=1}^{\infty}A_{n} | `\bigcap_{n=1}^{\infty}A_{n}` | `bigcap n=1~oo An` |
+| `{a,b,c} (literal set)` | \{1,2,3\} | `\{1,2,3\}` | `{1,2,3}` |
+| `{} (empty set literal)` | \{\} | `\{\}` | `{}` |
+| `{x \| cond} (set-builder)` | \{x\ \mid\ x\ >\ 0\} | `\{x\ \mid\ x\ >\ 0\}` | `{x \| x>0}` |
+| `{x : cond} (set-builder, alternate spelling)` | \{x\ \mid\ x\ >\ 0\} | `\{x\ \mid\ x\ >\ 0\}` | `{x : x>0}` |
 | `in` | \in | `\in` | `in` |
 | `notin` | \notin | `\notin` | `notin` |
 | `subset` | \subset | `\subset` | `subset` |
@@ -189,6 +196,12 @@ Intentionally unsupported / ambiguous forms:
 | `cap` | \cap | `\cap` | `cap` |
 | `setminus` | \setminus | `\setminus` | `setminus` |
 | `emptyset` | \emptyset | `\emptyset` | `emptyset` |
+| `aleph` | \aleph | `\aleph` | `aleph` |
+| `varnothing` | \varnothing | `\varnothing` | `varnothing` |
+| `nsubseteq` | \nsubseteq | `\nsubseteq` | `nsubseteq` |
+| `nsupseteq` | \nsupseteq | `\nsupseteq` | `nsupseteq` |
+| `subsetneq` | \subsetneq | `\subsetneq` | `subsetneq` |
+| `supsetneq` | \supsetneq | `\supsetneq` | `supsetneq` |
 
 ## Vectors
 
@@ -210,6 +223,8 @@ Intentionally unsupported / ambiguous forms:
 
 | Command | Result | LaTeX | Example |
 | --- | --- | --- | --- |
+| `a\|b (infix "given"/"divides" — not absolute value)` | a\ \mid\ b | `a\ \mid\ b` | `a\|b` |
+| `P(A\|B) (conditional probability)` | P(A\ \mid\ B) | `P(A\ \mid\ B)` | `P(A\|B)` |
 | `=` | x\ =\ y | `x\ =\ y` | `x=y` |
 | `<` | x\ <\ y | `x\ <\ y` | `x<y` |
 | `>` | x\ >\ y | `x\ >\ y` | `x>y` |
@@ -224,6 +239,10 @@ Intentionally unsupported / ambiguous forms:
 | `parallel` | \parallel | `\parallel` | `parallel` |
 | `angle` | \angle | `\angle` | `angle` |
 | `triangle` | \triangle | `\triangle` | `triangle` |
+| `propto` | \propto | `\propto` | `propto` |
+| `simeq` | \simeq | `\simeq` | `simeq` |
+| `mid` | \mid | `\mid` | `mid` |
+| `nmid` | \nmid | `\nmid` | `nmid` |
 
 ## Greek Letters
 
@@ -328,6 +347,11 @@ Intentionally unsupported / ambiguous forms:
 | `to` | \to | `\to` | `to` |
 | `mapsto` | \mapsto | `\mapsto` | `mapsto` |
 | `gets` | \gets | `\gets` | `gets` |
+| `hookrightarrow` | \hookrightarrow | `\hookrightarrow` | `hookrightarrow` |
+| `twoheadrightarrow` | \twoheadrightarrow | `\twoheadrightarrow` | `twoheadrightarrow` |
+| `Rightarrow` | \Rightarrow | `\Rightarrow` | `Rightarrow` |
+| `Leftarrow` | \Leftarrow | `\Leftarrow` | `Leftarrow` |
+| `Leftrightarrow` | \Leftrightarrow | `\Leftrightarrow` | `Leftrightarrow` |
 
 ## Special
 
@@ -352,6 +376,10 @@ Intentionally unsupported / ambiguous forms:
 | `implies` | \implies | `\implies` | `implies` |
 | `st` | \text{s.t.} | `\text{s.t.}` | `st` |
 | `s.t.` | \text{s.t.} | `\text{s.t.}` | `s.t.` |
+| `vdash` | \vdash | `\vdash` | `vdash` |
+| `dashv` | \dashv | `\dashv` | `dashv` |
+| `models` | \models | `\models` | `models` |
+| `Vdash` | \Vdash | `\Vdash` | `Vdash` |
 
 ## Dots
 
@@ -361,6 +389,39 @@ Intentionally unsupported / ambiguous forms:
 | `cdots` | \cdots | `\cdots` | `cdots` |
 | `vdots` | \vdots | `\vdots` | `vdots` |
 | `ddots` | \ddots | `\ddots` | `ddots` |
+
+## Order Theory
+
+| Command | Result | LaTeX | Example |
+| --- | --- | --- | --- |
+| `top` | \top | `\top` | `top` |
+| `bot` | \bot | `\bot` | `bot` |
+| `prec` | \prec | `\prec` | `prec` |
+| `preceq` | \preceq | `\preceq` | `preceq` |
+| `succ` | \succ | `\succ` | `succ` |
+| `succeq` | \succeq | `\succeq` | `succeq` |
+| `ll` | \ll | `\ll` | `ll` |
+| `gg` | \gg | `\gg` | `gg` |
+| `sqsubset` | \sqsubset | `\sqsubset` | `sqsubset` |
+| `sqsubseteq` | \sqsubseteq | `\sqsubseteq` | `sqsubseteq` |
+| `sqsupset` | \sqsupset | `\sqsupset` | `sqsupset` |
+| `sqsupseteq` | \sqsupseteq | `\sqsupseteq` | `sqsupseteq` |
+
+## Algebra
+
+| Command | Result | LaTeX | Example |
+| --- | --- | --- | --- |
+| `sqcup` | \sqcup | `\sqcup` | `sqcup` |
+| `sqcap` | \sqcap | `\sqcap` | `sqcap` |
+| `circ` | \circ | `\circ` | `circ` |
+| `oplus` | \oplus | `\oplus` | `oplus` |
+| `otimes` | \otimes | `\otimes` | `otimes` |
+| `ominus` | \ominus | `\ominus` | `ominus` |
+| `odot` | \odot | `\odot` | `odot` |
+| `wr` | \wr | `\wr` | `wr` |
+| `bullet` | \bullet | `\bullet` | `bullet` |
+| `star` | \star | `\star` | `star` |
+| `ast` | \ast | `\ast` | `ast` |
 
 ## Autocomplete Snippet
 
@@ -399,6 +460,7 @@ Intentionally unsupported / ambiguous forms:
 | `;proof` | :::proof<br><br>::: | `—` | `;proof + Tab` |
 | `;rem` | :::remark<br><br>::: | `—` | `;rem + Tab` |
 | `;ex` | :::example<br><br>::: | `—` | `;ex + Tab` |
+| `;box` | :::box <br><br>::: | `—` | `;box + Tab` |
 | `;pf` | ## 証明 | `—` | `;pf + Tab` |
 | `;remark` | ## 注意 | `—` | `;remark + Tab` |
 | `;qed` | □ | `—` | `;qed + Tab` |

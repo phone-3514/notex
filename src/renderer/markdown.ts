@@ -2,7 +2,7 @@ import katex from "katex";
 import { nodeToLatex, shorthandToLatex } from "./mathToLatex";
 import { parseMath } from "@/parser/parseMath";
 import type { MathNode } from "@/parser/ast";
-import { noteBlockLabel, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE } from "./noteBlocks";
+import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE } from "./noteBlocks";
 
 // Explicit math boundaries only — nothing here ever guesses that a line of
 // plain text is "probably math". A line becomes math only via:
@@ -350,10 +350,9 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
     // "= " display math, and "@...@" inline math all work inside it exactly
     // as they do at the top level — and each get their own data-src-line.
     const blockOpen = NOTE_BLOCK_OPEN_RE.exec(line);
-    const label = blockOpen ? noteBlockLabel(blockOpen[1]) : undefined;
-    if (blockOpen && label) {
+    const title = blockOpen ? resolveNoteBlockTitle(blockOpen[1], blockOpen[2]?.trim()) : undefined;
+    if (blockOpen && title) {
       const type = blockOpen[1];
-      const titleSuffix = blockOpen[2]?.trim();
       const startLine = baseLine + i;
       i++;
       const bodyStart = i;
@@ -363,7 +362,6 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
       const bodyLines = lines.slice(bodyStart, i);
       if (i < lines.length) i++; // consume the closing ":::" (if present — an
       // unterminated block just runs to the end of the chunk, non-crashing)
-      const title = titleSuffix ? `${label} ${titleSuffix}` : label;
       const innerHtml = renderMarkdownBlocks(bodyLines.join("\n"), baseLine + bodyStart);
       out.push(
         `<div class="note-block note-block-${type}" data-src-line="${startLine}"><div class="note-block-title">${escapeHtml(title)}</div><div class="note-block-body">${innerHtml}</div></div>`

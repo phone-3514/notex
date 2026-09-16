@@ -94,6 +94,7 @@ describe("COMMAND_ROWS", () => {
         ";proof",
         ";rem",
         ";ex",
+        ";box",
         ";pf",
         ";remark",
         ";qed",
@@ -107,6 +108,9 @@ describe("COMMAND_ROWS", () => {
     const thm = noteRows.find((r) => r.command === ";thm")!;
     expect(thm.rendered).toBe(":::theorem\n\n:::");
     expect(thm.latex).toBe("—");
+
+    const box = noteRows.find((r) => r.command === ";box")!;
+    expect(box.rendered).toBe(":::box \n\n:::");
 
     const m = noteRows.find((r) => r.command === ";m")!;
     expect(m.rendered).toBe("= ");

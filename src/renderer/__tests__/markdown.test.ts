@@ -423,6 +423,20 @@ describe("renderMarkdownToHtml", () => {
     });
   });
 
+  describe(':::box <title> (custom-named block, not in the fixed vocabulary)', () => {
+    it("uses the given title verbatim, with no Japanese label prefix", () => {
+      const html = renderMarkdownToHtml(":::box よく使う不等式\n本文\n:::");
+      expect(html).toContain('class="note-block note-block-box"');
+      expect(html).toContain('<div class="note-block-title">よく使う不等式</div>');
+      expect(html).toContain("本文");
+    });
+
+    it("is not rendered as a block without a title (nothing to name it)", () => {
+      const html = renderMarkdownToHtml(":::box\n本文\n:::");
+      expect(html).not.toContain("note-block");
+    });
+  });
+
   describe("piecewise/cases blocks: '= <lhs>=cases ... end'", () => {
     it("renders two branches as one display-math node", () => {
       const html = renderMarkdownToHtml("= f(x)=cases\nx^2, x>=0\n-x, x<0\nend");

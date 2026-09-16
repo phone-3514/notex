@@ -37,6 +37,7 @@ const SPACED_OPERATORS = new Set([
   "\\leq",
   "\\geq",
   "\\neq",
+  "\\mid",
 ]);
 
 function joinTight(parts: string[]): string {
@@ -88,6 +89,8 @@ export function nodeToLatex(node: MathNode): string {
       return `\\sqrt${braces(nodeToLatex(node.arg))}`;
     case "Bold":
       return `\\boldsymbol${braces(nodeToLatex(node.arg))}`;
+    case "Overline":
+      return `\\overline${braces(nodeToLatex(node.arg))}`;
     case "Func": {
       const name = `\\${node.name}`;
       return node.arg ? joinTight([name, nodeToLatex(node.arg)]) : name;
@@ -95,7 +98,14 @@ export function nodeToLatex(node: MathNode): string {
     case "Differential":
       return `\\,d${node.variable}`;
     case "BigOp": {
-      const cmd = node.op === "sum" ? "\\sum" : node.op === "prod" ? "\\prod" : "\\int";
+      const BIG_OP_COMMANDS: Record<typeof node.op, string> = {
+        sum: "\\sum",
+        prod: "\\prod",
+        int: "\\int",
+        bigcup: "\\bigcup",
+        bigcap: "\\bigcap",
+      };
+      const cmd = BIG_OP_COMMANDS[node.op];
       let head = cmd;
       if (node.sub) head += `_${braces(renderBigOpBound(node.sub))}`;
       if (node.sup) head += `^${braces(nodeToLatex(node.sup))}`;
@@ -132,6 +142,17 @@ export function nodeToLatex(node: MathNode): string {
       return joinTight([nodeToLatex(node.left), node.op, nodeToLatex(node.right)]);
     case "AbsoluteValue":
       return joinTight(["\\lvert", nodeToLatex(node.arg), "\\rvert"]);
+    case "SetLiteral":
+      // Tight comma spacing, matching ArgList — a finite set reads as one
+      // unit. Bare "{}" (no braces in the LaTeX source) is invisible
+      // grouping in TeX, so a literal set always needs the escaped
+      // "\{"/"\}" delimiters to actually print.
+      return `\\{${node.items.map(nodeToLatex).join(",")}\\}`;
+    case "SetBuilder":
+      // "\mid" (not the ":" some sources also use) is the semantically
+      // correct, universally-recognized "such that" divider regardless of
+      // which spelling ("{x | cond}" or "{x : cond}") the source used.
+      return `\\{${joinTight([nodeToLatex(node.variable), "\\mid", nodeToLatex(node.condition)])}\\}`;
     case "Neg":
       return `-${nodeToLatex(node.arg)}`;
     case "Prime":

@@ -162,7 +162,7 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
-    if ("()^_+-*/,!|:'".includes(ch)) {
+    if ("(){}^_+-*/,!|:'".includes(ch)) {
       tokens.push({ type: "SYMBOL", value: ch, pos: i });
       i++;
       continue;

@@ -422,6 +422,145 @@ describe("shorthandToLatex — vectors", () => {
       expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();
     }
   });
+
+  it("closure(x) renders \\overline — topological/algebraic closure, conjugate, etc.", () => {
+    expect(shorthandToLatex("closure(A)")).toBe("\\overline{A}");
+    expect(shorthandToLatex("closure x")).toBe("\\overline{x}");
+  });
+
+  it("closure composes with the rest of the DSL like bf/sqrt", () => {
+    expect(shorthandToLatex("closure(A cup B)")).toBe("\\overline{A\\cup B}");
+    expect(shorthandToLatex("closure(z)_1")).toBe("\\overline{z}_{1}");
+  });
+});
+
+describe("shorthandToLatex — sets ({...} literals and set-builder notation)", () => {
+  it("empty set literal", () => {
+    expect(shorthandToLatex("{}")).toBe("\\{\\}");
+  });
+
+  it("literal set of one or more elements", () => {
+    expect(shorthandToLatex("{1,2,3}")).toBe("\\{1,2,3\\}");
+    expect(shorthandToLatex("{x}")).toBe("\\{x\\}");
+  });
+
+  it("set literal elements are parsed by the full shorthand DSL", () => {
+    expect(shorthandToLatex("{x^2,y_1}")).toBe("\\{x^{2},y_{1}\\}");
+  });
+
+  it('set-builder notation, both "|" and ":" spellings, render identically', () => {
+    expect(shorthandToLatex("{x | x>0}")).toBe("\\{x\\ \\mid\\ x\\ >\\ 0\\}");
+    expect(shorthandToLatex("{x : x>0}")).toBe("\\{x\\ \\mid\\ x\\ >\\ 0\\}");
+  });
+
+  it("an absolute value inside a set literal/builder is not confused with the set's own delimiters", () => {
+    expect(shorthandToLatex("{|x|,y}")).toBe("\\{\\lvert x\\rvert,y\\}");
+    expect(shorthandToLatex("{|x| : x>0}")).toBe("\\{\\lvert x\\rvert\\ \\mid\\ x\\ >\\ 0\\}");
+  });
+
+  it("a bare '|' before a trailing comma is not mistaken for a set-builder (no title after it)", () => {
+    // The first element itself uses the infix "|" divider (see the mid-divider
+    // tests below) — since a second element follows, this is a 2-item set,
+    // not a set-builder.
+    expect(shorthandToLatex("{a|b, c}")).toBe("\\{a\\ \\mid\\ b,c\\}");
+  });
+
+  it("every set example produces LaTeX that KaTeX actually accepts", () => {
+    const examples = ["{}", "{1,2,3}", "{x | x>0}", "{x : x>0}", "{|x| : x>0}"];
+    for (const example of examples) {
+      const latex = shorthandToLatex(example);
+      expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();
+    }
+  });
+});
+
+describe('shorthandToLatex — "|" as an infix "given"/"divides" divider (not absolute value)', () => {
+  it("a bare '|' between two atoms is the mid-divider, not an unmatched abs-value bar", () => {
+    expect(shorthandToLatex("a|b")).toBe("a\\ \\mid\\ b");
+  });
+
+  it("conditional probability notation, e.g. P(A|B)", () => {
+    expect(shorthandToLatex("P(A|B)")).toBe("P(A\\ \\mid\\ B)");
+  });
+
+  it("does not regress absolute value, including juxtaposed against another factor", () => {
+    expect(shorthandToLatex("|x|")).toBe("\\lvert x\\rvert");
+    expect(shorthandToLatex("|an-A|")).toBe("\\lvert a_{n}-A\\rvert");
+    expect(shorthandToLatex("|an-A|<eps")).toBe("\\lvert a_{n}-A\\rvert\\ <\\ \\varepsilon");
+    expect(shorthandToLatex("2|x|")).toBe("2\\lvert x\\rvert");
+  });
+
+  it("still rejects a genuinely unmatched bar with a clear, non-crashing error", () => {
+    expect(() => shorthandToLatex("|x")).toThrow(MathSyntaxError);
+    expect(() => shorthandToLatex("x|")).toThrow(MathSyntaxError);
+  });
+});
+
+describe("shorthandToLatex — bigcup/bigcap (indexed union/intersection)", () => {
+  it("bigcup and bigcap with sum-style bounds", () => {
+    expect(shorthandToLatex("bigcup n=1~oo An")).toBe("\\bigcup_{n=1}^{\\infty}A_{n}");
+    expect(shorthandToLatex("bigcap n=1~oo An")).toBe("\\bigcap_{n=1}^{\\infty}A_{n}");
+  });
+
+  it("does not disturb the existing plain (binary) cup/cap word keywords", () => {
+    expect(shorthandToLatex("A cup B")).toBe("A\\cup B");
+    expect(shorthandToLatex("A cap B")).toBe("A\\cap B");
+  });
+
+  it("every bigcup/bigcap example produces LaTeX that KaTeX actually accepts", () => {
+    const examples = ["bigcup n=1~oo An", "bigcap n=1~oo An"];
+    for (const example of examples) {
+      const latex = shorthandToLatex(example);
+      expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();
+    }
+  });
+});
+
+describe("shorthandToLatex — additional university-math word keywords", () => {
+  it("a representative sample renders the expected command", () => {
+    const table: Record<string, string> = {
+      top: "\\top",
+      bot: "\\bot",
+      aleph: "\\aleph",
+      varnothing: "\\varnothing",
+      subsetneq: "\\subsetneq",
+      prec: "\\prec",
+      succeq: "\\succeq",
+      sqsubseteq: "\\sqsubseteq",
+      oplus: "\\oplus",
+      otimes: "\\otimes",
+      circ: "\\circ",
+      vdash: "\\vdash",
+      models: "\\models",
+      hookrightarrow: "\\hookrightarrow",
+      Rightarrow: "\\Rightarrow",
+      propto: "\\propto",
+      mid: "\\mid",
+      nmid: "\\nmid",
+    };
+    for (const [word, latex] of Object.entries(table)) {
+      expect(shorthandToLatex(word), word).toBe(latex);
+    }
+  });
+
+  it("'circ' composes with '^' for interior notation", () => {
+    expect(shorthandToLatex("A^circ")).toBe("A^{\\circ}");
+  });
+
+  it("every new word keyword produces LaTeX that KaTeX actually accepts", () => {
+    const words = [
+      "top", "bot", "aleph", "varnothing", "nsubseteq", "nsupseteq", "subsetneq", "supsetneq",
+      "prec", "preceq", "succ", "succeq", "ll", "gg", "propto", "simeq", "mid", "nmid",
+      "sqcup", "sqcap", "sqsubset", "sqsubseteq", "sqsupset", "sqsupseteq", "circ",
+      "oplus", "otimes", "ominus", "odot", "wr", "bullet", "star", "ast",
+      "vdash", "dashv", "models", "Vdash",
+      "hookrightarrow", "twoheadrightarrow", "Rightarrow", "Leftarrow", "Leftrightarrow",
+    ];
+    for (const word of words) {
+      const latex = shorthandToLatex(word);
+      expect(() => katex.renderToString(latex, { throwOnError: true }), word).not.toThrow();
+    }
+  });
 });
 
 describe("shorthandToLatex — contextual comma spacing", () => {

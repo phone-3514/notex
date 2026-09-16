@@ -54,6 +54,16 @@ describe("noteToMarkdown", () => {
     expect(md).toBe("**定理 2.5.**\n\nSome $a\\ <\\ b$ statement.\n");
   });
 
+  it("converts a ':::box <title>' custom block to its own bold title verbatim", () => {
+    const md = noteToMarkdown(":::box よく使う不等式\n本文\n:::");
+    expect(md).toBe("**よく使う不等式.**\n\n本文\n");
+  });
+
+  it("leaves an untitled ':::box' block as literal text (nothing to name it)", () => {
+    const md = noteToMarkdown(":::box\n本文\n:::");
+    expect(md).toBe(":::box\n本文\n:::\n");
+  });
+
   it("flags an invalid inline expression without crashing or emitting fake LaTeX", () => {
     const md = noteToMarkdown("Bad @)(@ here.");
     expect(md).toContain("math error");

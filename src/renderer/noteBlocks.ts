@@ -17,6 +17,23 @@ export const NOTE_BLOCK_LABELS: Record<string, string> = {
 export const NOTE_BLOCK_OPEN_RE = /^:::(\w+)(?:\s+(.*))?$/;
 export const NOTE_BLOCK_CLOSE = ":::";
 
-export function noteBlockLabel(type: string): string | undefined {
-  return NOTE_BLOCK_LABELS[type];
+// ":::box <title>" is the escape hatch for a box outside the fixed
+// vocabulary above: instead of a looked-up Japanese label, the text after
+// "box" is used verbatim as the title — e.g. ":::box よく使う不等式" renders
+// a block titled exactly "よく使う不等式". Unlike the fixed types, a title is
+// required (an untitled box has nothing to show and isn't rendered as one).
+const CUSTOM_BLOCK_TYPE = "box";
+
+// The single place both the HTML preview (markdown.ts) and the Markdown
+// export (exportMarkdown.ts) resolve a ":::type[ suffix]" open line to its
+// rendered title, so the two stay in sync. Returns undefined when `type`
+// isn't recognized (fixed type or "box") — the caller then leaves the line
+// as ordinary text instead of starting a block.
+export function resolveNoteBlockTitle(type: string, titleSuffix: string | undefined): string | undefined {
+  if (type === CUSTOM_BLOCK_TYPE) {
+    return titleSuffix || undefined;
+  }
+  const label = NOTE_BLOCK_LABELS[type];
+  if (!label) return undefined;
+  return titleSuffix ? `${label} ${titleSuffix}` : label;
 }

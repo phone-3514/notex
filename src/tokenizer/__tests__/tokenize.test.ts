@@ -110,4 +110,13 @@ describe("tokenize", () => {
     expect(() => tokenize("\\")).toThrow(MathSyntaxError);
     expect(() => tokenize("\\1")).toThrow(MathSyntaxError);
   });
+
+  it("tokenizes { and } as their own symbols (set literal/set-builder braces)", () => {
+    expect(tokenize("{x}").map((t) => [t.type, t.value])).toEqual([
+      ["SYMBOL", "{"],
+      ["IDENT", "x"],
+      ["SYMBOL", "}"],
+      ["EOF", ""],
+    ]);
+  });
 });

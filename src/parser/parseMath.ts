@@ -62,6 +62,23 @@ class Parser {
       const right = this.parseAdd();
       left = { kind: "Relation", op: RELATION_SYMBOLS[opTok.value] ?? opTok.value, left, right };
     }
+    // "|" as an infix "given/divides/such that" divider (e.g. "P(A|B)"
+    // conditional probability, "a|b" divisibility, "x | x>0" set-builder) —
+    // distinct from the same character's use as absolute-value bars
+    // ("|x|"), which is only ever a *prefix* (opening) use fully consumed
+    // inside parseAtom's parseAbsoluteValue, or backed out of by parseTerm's
+    // speculative juxtaposition attempt above, before parseRel ever sees a
+    // "|" here. The `absDepth === 0` guard is what keeps the two apart: a
+    // bare "|" found while already scanning an abs value's content
+    // (absDepth > 0) is left alone so it can close that enclosing pair
+    // instead. The right side is a full `parseRel()` (not just `parseAdd`)
+    // so a condition like "x>0" parses whole, not just up to "x" — which
+    // does allow chaining ("a|b|c" -> "a mid (b mid c)"), harmlessly.
+    if (this.isSymbol("|") && this.absDepth === 0) {
+      this.next();
+      const right = this.parseRel();
+      return { kind: "Relation", op: "\\mid", left, right };
+    }
     return left;
   }
 
@@ -103,6 +120,30 @@ class Parser {
         left = { kind: "Frac", num: left, den: right };
         continue;
       }
+      // A "|" here is genuinely ambiguous: it's either the start of an
+      // absolute value juxtaposed onto the preceding factor ("2|x|" = 2
+      // times |x|, "n|A|" — a common, unremarkable pattern) or parseRel's
+      // infix "given/divides" mid-divider ("a|b", "P(A|B)") once this loop
+      // gives up on treating it as a new factor. Try the abs-value reading
+      // first — speculatively, backtracking to right before the "|" if it
+      // turns out there's no matching close bar in scope (e.g. hits ")",
+      // ",", "}", or a relational operator before ever finding one) — and
+      // leave the (still-unconsumed) "|" for parseRel to reinterpret.
+      if (this.isSymbol("|") && this.absDepth === 0) {
+        const checkpoint = this.pos;
+        try {
+          const right = this.parseFactor();
+          left =
+            left.kind === "Row"
+              ? { kind: "Row", items: [...left.items, right] }
+              : { kind: "Row", items: [left, right] };
+          continue;
+        } catch (err) {
+          if (!(err instanceof MathSyntaxError)) throw err;
+          this.pos = checkpoint;
+          break;
+        }
+      }
       if (this.startsFactor(this.peek())) {
         const right = this.parseFactor();
         left =
@@ -118,7 +159,7 @@ class Parser {
 
   private startsFactor(t: Token): boolean {
     if (t.type === "NUMBER" || t.type === "IDENT" || t.type === "LITERAL") return true;
-    if (t.type === "SYMBOL" && (t.value === "(" || t.value === ":")) return true;
+    if (t.type === "SYMBOL" && (t.value === "(" || t.value === ":" || t.value === "{")) return true;
     if (t.type === "SYMBOL" && t.value === "|" && this.absDepth === 0) return true;
     return false;
   }
@@ -183,6 +224,10 @@ class Parser {
       return this.parseAbsoluteValue();
     }
 
+    if (t.type === "SYMBOL" && t.value === "{") {
+      return this.parseBraceGroup();
+    }
+
     // Literal punctuation, e.g. "f: A mapsto B" (function signature colon).
     // Not an operator — just an atom rendered as itself.
     if (t.type === "SYMBOL" && t.value === ":") {
@@ -240,6 +285,56 @@ class Parser {
     return { kind: "AbsoluteValue", arg: inner };
   }
 
+  // "{}" (empty set), "{a,b,c}" (a literal/finite set), or a set-builder —
+  // "{x | cond}" or "{x : cond}" (both spellings render identically, via
+  // "\mid" — see the SetBuilder case in mathToLatex.ts).
+  private parseBraceGroup(): MathNode {
+    this.next(); // '{'
+    if (this.isSymbol("}")) {
+      this.next();
+      return { kind: "SetLiteral", items: [] };
+    }
+
+    // Try the set-builder reading first — speculatively, backtracking to
+    // right after "{" if it doesn't pan out (e.g. a comma follows instead of
+    // the closing "}", meaning the "|"/":" actually belonged to a literal
+    // set's first element, like "{a|b, c}" — a 2-item set whose first
+    // element happens to use the "|" mid-divider from parseRel). A
+    // set-builder's bound variable is always a single simple factor ("x",
+    // "x_n", "x^2", "|x|"), never a full juxtaposed/joined expression, which
+    // is why this uses parseFactor (not parseRel/parseTerm) for it — parsing
+    // it with parseRel would let parseTerm's own ":"-as-juxtaposed-literal
+    // handling (see parseAtom above, for "f: A") silently swallow the ":"
+    // before this ever sees it.
+    const checkpoint = this.pos;
+    const variable = this.parseFactor();
+    if (this.isSymbol("|") || this.isSymbol(":")) {
+      this.next();
+      const condition = this.parseRel();
+      if (this.isSymbol("}")) {
+        this.next();
+        return { kind: "SetBuilder", variable, condition };
+      }
+    }
+    this.pos = checkpoint;
+
+    const items = [this.parseRel()];
+    while (this.isSymbol(",")) {
+      this.next();
+      items.push(this.parseRel());
+    }
+    this.expectCloseBrace();
+    return { kind: "SetLiteral", items };
+  }
+
+  private expectCloseBrace(): void {
+    const close = this.peek();
+    if (!(close.type === "SYMBOL" && close.value === "}")) {
+      throw new MathSyntaxError('Missing closing "}"', close.pos);
+    }
+    this.next();
+  }
+
   private parseIdentAtom(): MathNode {
     const t = this.next();
     const word = t.value;
@@ -250,6 +345,8 @@ class Parser {
           return this.parseSqrt();
         case "sum":
         case "prod":
+        case "bigcup":
+        case "bigcap":
           return this.parseBigOp(word);
         case "int":
           return this.parseBigOp("int");
@@ -263,6 +360,8 @@ class Parser {
           return this.parseVector(word);
         case "bf":
           return this.parseBold();
+        case "closure":
+          return this.parseOverline();
       }
     }
 
@@ -373,6 +472,12 @@ class Parser {
     return { kind: "Bold", arg: this.unwrapGroup(this.parseAtom()) };
   }
 
+  // closure(x) / closure x: topological/algebraic closure, complex
+  // conjugate, etc. (\overline) — same single-argument shape as bf/sqrt.
+  private parseOverline(): MathNode {
+    return { kind: "Overline", arg: this.unwrapGroup(this.parseAtom()) };
+  }
+
   // vec(a,b,c) / colvec(a,b,c): reuses parseParenGroup's comma-list parsing.
   // A single item keeps the classic arrow-vector shorthand ("vec(a)" ->
   // \vec{a}, the pre-existing notation this must not disturb — see the
@@ -386,7 +491,7 @@ class Parser {
     return { kind: "Vector", style: kind, items };
   }
 
-  private parseBigOp(op: "sum" | "prod" | "int"): MathNode {
+  private parseBigOp(op: "sum" | "prod" | "int" | "bigcup" | "bigcap"): MathNode {
     let sub: MathNode | null = null;
     let sup: MathNode | null = null;
 
