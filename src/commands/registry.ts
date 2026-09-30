@@ -59,12 +59,16 @@ const STRUCTURAL_ROWS: CommandRow[] = [
   mathRow('\\X (literal escape, e.g. "\\N")', "\\N", "Symbols"),
   mathRow("bigcup", "bigcup n=1~oo An", "Sets"),
   mathRow("bigcap", "bigcap n=1~oo An", "Sets"),
+  mathRow("bigoplus (indexed direct sum)", "bigoplus n=1~oo Vn", "Algebra"),
+  mathRow("bigotimes (indexed tensor product)", "bigotimes n=1~oo Vn", "Algebra"),
   mathRow("{a,b,c} (literal set)", "{1,2,3}", "Sets"),
   mathRow("{} (empty set literal)", "{}", "Sets"),
   mathRow("{x | cond} (set-builder)", "{x | x>0}", "Sets"),
   mathRow("{x : cond} (set-builder, alternate spelling)", "{x : x>0}", "Sets"),
   mathRow('a|b (infix "given"/"divides" — not absolute value)', "a|b", "Relations"),
   mathRow("P(A|B) (conditional probability)", "P(A|B)", "Relations"),
+  mathRow("<v> (inner product / span / generator notation)", "<v>", "Vectors"),
+  mathRow("<u,v> (e.g. inner product of two vectors)", "<u,v>", "Vectors"),
 ];
 
 // Relational operators: the two-char ones (<=, >=, !=) are rendered as LaTeX

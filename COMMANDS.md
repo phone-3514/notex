@@ -211,6 +211,8 @@ Intentionally unsupported / ambiguous forms:
 | `vec(x,y,...) (row vector)` | \begin{pmatrix}a & b & c\end{pmatrix} | `\begin{pmatrix}a & b & c\end{pmatrix}` | `vec(a,b,c)` |
 | `colvec(x,y,...) (column vector)` | \begin{pmatrix}a\\b\\c\end{pmatrix} | `\begin{pmatrix}a\\b\\c\end{pmatrix}` | `colvec(a,b,c)` |
 | `bf(x) (bold vector/matrix, no arrow)` | \boldsymbol{v} | `\boldsymbol{v}` | `bf(v)` |
+| `<v> (inner product / span / generator notation)` | \langle v\rangle | `\langle v\rangle` | `<v>` |
+| `<u,v> (e.g. inner product of two vectors)` | \langle u,v\rangle | `\langle u,v\rangle` | `<u,v>` |
 
 ## Symbols
 
@@ -218,6 +220,24 @@ Intentionally unsupported / ambiguous forms:
 | --- | --- | --- | --- |
 | `\X (literal escape, e.g. "\N")` | N | `N` | `\N` |
 | `...` | \ldots | `\ldots` | `...` |
+
+## Algebra
+
+| Command | Result | LaTeX | Example |
+| --- | --- | --- | --- |
+| `bigoplus (indexed direct sum)` | \bigoplus_{n=1}^{\infty}V_{n} | `\bigoplus_{n=1}^{\infty}V_{n}` | `bigoplus n=1~oo Vn` |
+| `bigotimes (indexed tensor product)` | \bigotimes_{n=1}^{\infty}V_{n} | `\bigotimes_{n=1}^{\infty}V_{n}` | `bigotimes n=1~oo Vn` |
+| `sqcup` | \sqcup | `\sqcup` | `sqcup` |
+| `sqcap` | \sqcap | `\sqcap` | `sqcap` |
+| `circ` | \circ | `\circ` | `circ` |
+| `oplus` | \oplus | `\oplus` | `oplus` |
+| `otimes` | \otimes | `\otimes` | `otimes` |
+| `ominus` | \ominus | `\ominus` | `ominus` |
+| `odot` | \odot | `\odot` | `odot` |
+| `wr` | \wr | `\wr` | `wr` |
+| `bullet` | \bullet | `\bullet` | `bullet` |
+| `star` | \star | `\star` | `star` |
+| `ast` | \ast | `\ast` | `ast` |
 
 ## Relations
 
@@ -406,22 +426,6 @@ Intentionally unsupported / ambiguous forms:
 | `sqsubseteq` | \sqsubseteq | `\sqsubseteq` | `sqsubseteq` |
 | `sqsupset` | \sqsupset | `\sqsupset` | `sqsupset` |
 | `sqsupseteq` | \sqsupseteq | `\sqsupseteq` | `sqsupseteq` |
-
-## Algebra
-
-| Command | Result | LaTeX | Example |
-| --- | --- | --- | --- |
-| `sqcup` | \sqcup | `\sqcup` | `sqcup` |
-| `sqcap` | \sqcap | `\sqcap` | `sqcap` |
-| `circ` | \circ | `\circ` | `circ` |
-| `oplus` | \oplus | `\oplus` | `oplus` |
-| `otimes` | \otimes | `\otimes` | `otimes` |
-| `ominus` | \ominus | `\ominus` | `ominus` |
-| `odot` | \odot | `\odot` | `odot` |
-| `wr` | \wr | `\wr` | `wr` |
-| `bullet` | \bullet | `\bullet` | `bullet` |
-| `star` | \star | `\star` | `star` |
-| `ast` | \ast | `\ast` | `ast` |
 
 ## Autocomplete Snippet
 

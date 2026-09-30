@@ -198,6 +198,27 @@ describe("shorthandToLatex — general expression DSL (quantifiers, membership, 
     expect(shorthandToLatex("forallA")).toBe(shorthandToLatex("forall A"));
   });
 
+  it("quantifier variable dispatches through the full DSL, not just resolveIdentSymbol", () => {
+    // Regression: forall/exists used to grab a single raw IDENT token and
+    // resolve it directly, bypassing parseIdentAtom's STRUCTURAL_KEYWORDS
+    // check entirely — so "forall bf(ai)" silently misread "bf" as the
+    // compact-subscript shorthand ("b_f") instead of dispatching to bf's
+    // boldsymbol wrapper, leaving "(ai)" to be swallowed by unrelated
+    // juxtaposition.
+    expect(shorthandToLatex("forall bf(ai)")).toBe("\\forall\\ \\boldsymbol{a_{i}}");
+    expect(shorthandToLatex("exists sqrt(x)")).toBe("\\exists\\ \\sqrt{x}");
+  });
+
+  it("quantifier variable supports subscript/superscript postfix (previously unsupported)", () => {
+    expect(shorthandToLatex("forall x_i>0")).toBe("\\forall\\ x_{i}\\ >\\ 0");
+  });
+
+  it("does not regress bare or parenthesized quantifier variables", () => {
+    expect(shorthandToLatex("forall eps>0")).toBe("\\forall\\ \\varepsilon\\ >\\ 0");
+    expect(shorthandToLatex("exists(n0)")).toBe("\\exists\\ n_{0}");
+    expect(shorthandToLatex("exists n0 in NN")).toBe("\\exists\\ n_{0}\\ \\in\\ \\mathbb{N}");
+  });
+
   it("does not regress backward-compatible syntax", () => {
     expect(shorthandToLatex("sum n=1~oo 1/n")).toBe("\\sum_{n=1}^{\\infty}\\frac{1}{n}");
     expect(shorthandToLatex("int a~b f(x) dx")).toBe("\\int_{a}^{b}f(x)\\,dx");
@@ -496,6 +517,42 @@ describe('shorthandToLatex — "|" as an infix "given"/"divides" divider (not ab
   });
 });
 
+describe("shorthandToLatex — <...> angle brackets (inner product / basis / span / generator)", () => {
+  it("single item", () => {
+    expect(shorthandToLatex("<v>")).toBe("\\langle v\\rangle");
+  });
+
+  it("multiple comma-separated items", () => {
+    expect(shorthandToLatex("<v1,v2>")).toBe("\\langle v_{1},v_{2}\\rangle");
+    expect(shorthandToLatex("<v1,v2,v3>")).toBe("\\langle v_{1},v_{2},v_{3}\\rangle");
+  });
+
+  it("items are parsed by the full shorthand DSL", () => {
+    expect(shorthandToLatex("<a+b,c>")).toBe("\\langle a+b,c\\rangle");
+  });
+
+  it("does not regress ordinary '<'/'<=' comparisons, including chained ones", () => {
+    expect(shorthandToLatex("x<y")).toBe("x\\ <\\ y");
+    expect(shorthandToLatex("x<=y")).toBe("x\\ \\leq\\ y");
+    expect(shorthandToLatex("x<y<z")).toBe("x\\ <\\ y\\ <\\ z");
+    expect(shorthandToLatex("f(x)<g(x)")).toBe("f(x)\\ <\\ g(x)");
+  });
+
+  it("composes with the rest of the DSL (bf, subscript, nesting)", () => {
+    expect(shorthandToLatex("bf(<v>)")).toBe("\\boldsymbol{\\langle v\\rangle}");
+    expect(shorthandToLatex("<v>_1")).toBe("\\langle v\\rangle_{1}");
+    expect(shorthandToLatex("<<a,b>,c>")).toBe("\\langle\\langle a,b\\rangle,c\\rangle");
+  });
+
+  it("every angle-bracket example produces LaTeX that KaTeX actually accepts", () => {
+    const examples = ["<v>", "<v1,v2>", "<a+b,c>", "bf(<v>)", "<v>_1"];
+    for (const example of examples) {
+      const latex = shorthandToLatex(example);
+      expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();
+    }
+  });
+});
+
 describe("shorthandToLatex — bigcup/bigcap (indexed union/intersection)", () => {
   it("bigcup and bigcap with sum-style bounds", () => {
     expect(shorthandToLatex("bigcup n=1~oo An")).toBe("\\bigcup_{n=1}^{\\infty}A_{n}");
@@ -509,6 +566,26 @@ describe("shorthandToLatex — bigcup/bigcap (indexed union/intersection)", () =
 
   it("every bigcup/bigcap example produces LaTeX that KaTeX actually accepts", () => {
     const examples = ["bigcup n=1~oo An", "bigcap n=1~oo An"];
+    for (const example of examples) {
+      const latex = shorthandToLatex(example);
+      expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();
+    }
+  });
+});
+
+describe("shorthandToLatex — bigoplus/bigotimes (indexed direct sum/tensor product)", () => {
+  it("bigoplus and bigotimes with sum-style bounds", () => {
+    expect(shorthandToLatex("bigoplus n=1~oo Vn")).toBe("\\bigoplus_{n=1}^{\\infty}V_{n}");
+    expect(shorthandToLatex("bigotimes n=1~oo Vn")).toBe("\\bigotimes_{n=1}^{\\infty}V_{n}");
+  });
+
+  it("does not disturb the existing plain (binary) oplus/otimes word keywords", () => {
+    expect(shorthandToLatex("U oplus W")).toBe("U\\oplus W");
+    expect(shorthandToLatex("U otimes W")).toBe("U\\otimes W");
+  });
+
+  it("every bigoplus/bigotimes example produces LaTeX that KaTeX actually accepts", () => {
+    const examples = ["bigoplus n=1~oo Vn", "bigotimes n=1~oo Vn"];
     for (const example of examples) {
       const latex = shorthandToLatex(example);
       expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();

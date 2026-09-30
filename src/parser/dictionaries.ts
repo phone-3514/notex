@@ -203,6 +203,8 @@ export const STRUCTURAL_KEYWORDS = new Set([
   "int",
   "bigcup",
   "bigcap",
+  "bigoplus",
+  "bigotimes",
   "lim",
   "sqrt",
   "forall",

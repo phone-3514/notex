@@ -15,7 +15,7 @@ export type MathNode =
   | { kind: "Differential"; variable: string }
   | {
       kind: "BigOp";
-      op: "sum" | "prod" | "int" | "bigcup" | "bigcap";
+      op: "sum" | "prod" | "int" | "bigcup" | "bigcap" | "bigoplus" | "bigotimes";
       sub: MathNode | null;
       sup: MathNode | null;
       body: MathNode;
@@ -38,4 +38,5 @@ export type MathNode =
   | { kind: "AbsoluteValue"; arg: MathNode } // |...|
   | { kind: "SetLiteral"; items: MathNode[] } // {a,b,c} / {} — a finite/literal set
   | { kind: "SetBuilder"; variable: MathNode; condition: MathNode } // {x | cond} / {x : cond}
+  | { kind: "AngleGroup"; items: MathNode[] } // <a,b,c> — inner product / basis-span / generator notation
   | { kind: "Sequence"; items: MathNode[] }; // comma-separated clauses, e.g. quantifier chains

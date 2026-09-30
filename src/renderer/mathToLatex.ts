@@ -104,6 +104,8 @@ export function nodeToLatex(node: MathNode): string {
         int: "\\int",
         bigcup: "\\bigcup",
         bigcap: "\\bigcap",
+        bigoplus: "\\bigoplus",
+        bigotimes: "\\bigotimes",
       };
       const cmd = BIG_OP_COMMANDS[node.op];
       let head = cmd;
@@ -153,6 +155,8 @@ export function nodeToLatex(node: MathNode): string {
       // correct, universally-recognized "such that" divider regardless of
       // which spelling ("{x | cond}" or "{x : cond}") the source used.
       return `\\{${joinTight([nodeToLatex(node.variable), "\\mid", nodeToLatex(node.condition)])}\\}`;
+    case "AngleGroup":
+      return joinTight(["\\langle", node.items.map(nodeToLatex).join(","), "\\rangle"]);
     case "Neg":
       return `-${nodeToLatex(node.arg)}`;
     case "Prime":
