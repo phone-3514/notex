@@ -219,6 +219,7 @@ Intentionally unsupported / ambiguous forms:
 | Command | Result | LaTeX | Example |
 | --- | --- | --- | --- |
 | `\X (literal escape, e.g. "\N")` | N | `N` | `\N` |
+| `text(words) (upright prose inside math, e.g. "such that")` | \text{such that} | `\text{such that}` | `text(such that)` |
 | `...` | \ldots | `\ldots` | `...` |
 
 ## Algebra

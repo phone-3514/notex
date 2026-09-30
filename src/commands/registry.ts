@@ -57,6 +57,7 @@ const STRUCTURAL_ROWS: CommandRow[] = [
   // sets, function names, Greek letters, compact subscripts) — e.g. plain
   // "N" is always \mathbb{N}, so a literal capital N needs "\N".
   mathRow('\\X (literal escape, e.g. "\\N")', "\\N", "Symbols"),
+  mathRow("text(words) (upright prose inside math, e.g. \"such that\")", "text(such that)", "Symbols"),
   mathRow("bigcup", "bigcup n=1~oo An", "Sets"),
   mathRow("bigcap", "bigcap n=1~oo An", "Sets"),
   mathRow("bigoplus (indexed direct sum)", "bigoplus n=1~oo Vn", "Algebra"),

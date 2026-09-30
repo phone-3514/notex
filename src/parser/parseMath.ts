@@ -12,6 +12,27 @@ import {
 
 const FUNCTION_NAME_SET = new Set<string>(FUNCTION_NAMES);
 
+// Escapes LaTeX-special characters inside a "text(...)" span's raw content
+// so any prose the user types renders literally instead of erroring or
+// being reinterpreted as LaTeX (e.g. a literal "_" or "%" inside \text{}
+// still means something special to TeX unless escaped). A single regex
+// pass — the replacer's own output is never rescanned, so this can't
+// double-escape the backslashes it introduces.
+function escapeTextLiteral(s: string): string {
+  return s.replace(/[\\{}$&%#_^~]/g, (ch) => {
+    switch (ch) {
+      case "\\":
+        return "\\textbackslash{}";
+      case "^":
+        return "\\textasciicircum{}";
+      case "~":
+        return "\\textasciitilde{}";
+      default:
+        return `\\${ch}`;
+    }
+  });
+}
+
 class Parser {
   private tokens: Token[];
   private pos = 0;
@@ -174,7 +195,7 @@ class Parser {
   // it. parseAtom (called directly by vec/bf/sqrt/etc., or as the first
   // factor of a fresh expression) still handles a leading "<" — see there.
   private startsFactor(t: Token): boolean {
-    if (t.type === "NUMBER" || t.type === "IDENT" || t.type === "LITERAL") return true;
+    if (t.type === "NUMBER" || t.type === "IDENT" || t.type === "LITERAL" || t.type === "TEXT_LITERAL") return true;
     if (t.type === "SYMBOL" && (t.value === "(" || t.value === ":" || t.value === "{")) return true;
     if (t.type === "SYMBOL" && t.value === "|" && this.absDepth === 0) return true;
     return false;
@@ -271,6 +292,16 @@ class Parser {
     if (t.type === "LITERAL") {
       this.next();
       return { kind: "Sym", name: t.value };
+    }
+
+    // "text(...)" (see tokenize.ts): raw, unparsed prose rendered upright
+    // via \text, not italic math variables — the escape hatch for plain
+    // words/labels inside a formula that shouldn't be run through the
+    // shorthand grammar at all (unlike "\X", which escapes a single
+    // letter-run out of the *dictionary* lookup but still parses as math).
+    if (t.type === "TEXT_LITERAL") {
+      this.next();
+      return { kind: "Sym", name: `\\text{${escapeTextLiteral(t.value)}}` };
     }
 
     throw new MathSyntaxError(

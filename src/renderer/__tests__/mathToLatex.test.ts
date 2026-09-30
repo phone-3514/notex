@@ -167,6 +167,49 @@ describe("shorthandToLatex — general expression DSL (quantifiers, membership, 
     expect(shorthandToLatex("\\alpha")).toBe("alpha");
   });
 
+  it('"text(...)" renders upright prose (\\text), unparsed by the shorthand grammar', () => {
+    expect(shorthandToLatex("text(hello world)")).toBe("\\text{hello world}");
+    // Words that would otherwise be shorthand keywords ("in" -> \in, "to" ->
+    // \to) stay literal inside text(...) — this is the whole point.
+    expect(shorthandToLatex("text(where x is odd)")).toBe("\\text{where x is odd}");
+  });
+
+  it('"text(...)" escapes LaTeX-special characters in its content', () => {
+    expect(shorthandToLatex("text(50%)")).toBe("\\text{50\\%}");
+    expect(shorthandToLatex("text(a_b)")).toBe("\\text{a\\_b}");
+  });
+
+  it('"text(...)" supports nested parens', () => {
+    expect(shorthandToLatex("text(cost (approx))")).toBe("\\text{cost (approx)}");
+  });
+
+  it('"text(...)" gets a real visual gap from neighboring math, like the existing "s.t." case', () => {
+    expect(shorthandToLatex("x+text(if odd)")).toBe("x+\\text{if odd}");
+    expect(shorthandToLatex("forall x, text(such that) x>0")).toBe(
+      "\\forall\\ x,\\;\\text{such that}\\ x\\ >\\ 0"
+    );
+  });
+
+  it('"text(...)" rejects an unterminated span with a clear, non-crashing error', () => {
+    expect(() => shorthandToLatex("text(hello")).toThrow(MathSyntaxError);
+  });
+
+  it("does not regress the existing \\text{s.t.} word keyword", () => {
+    expect(shorthandToLatex("st")).toBe("\\text{s.t.}");
+    expect(shorthandToLatex("s.t.")).toBe("\\text{s.t.}");
+    expect(shorthandToLatex("exists x in R st x>0")).toBe(
+      "\\exists\\ x\\ \\in\\ \\mathbb{R}\\ \\text{s.t.}\\ x\\ >\\ 0"
+    );
+  });
+
+  it('every "text(...)" example produces LaTeX that KaTeX actually accepts', () => {
+    const examples = ["text(hello world)", "text(50%)", "text(a_b)", "text(x^2)", "text(cost (approx))"];
+    for (const example of examples) {
+      const latex = shorthandToLatex(example);
+      expect(() => katex.renderToString(latex, { throwOnError: true }), example).not.toThrow();
+    }
+  });
+
   it("log with an explicit base composes from the plain subscript operator", () => {
     expect(shorthandToLatex("log_10(100)")).toBe("\\log_{10}(100)");
     expect(shorthandToLatex("log_2 x")).toBe("\\log_{2}x");

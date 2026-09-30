@@ -11,16 +11,27 @@ function endsWithControlWord(s: string): boolean {
 function startsWithBareLetter(s: string): boolean {
   return /^[a-zA-Z]/.test(s);
 }
+// Any "text(...)" span (see parseMath.ts) renders as "\text{<arbitrary
+// content>}" — a different string every time, so it can't be listed in
+// SPACED_OPERATORS by exact value like the one fixed "\text{s.t.}" case
+// below. Matched structurally instead, so every text() call gets the same
+// real visual gap around it as that hardcoded case already does (unlike
+// "\text{s.t.}ab", plain juxtaposition would otherwise butt prose directly
+// against neighboring math with no visible boundary).
+function isTextCommand(s: string): boolean {
+  return s.startsWith("\\text{") && s.endsWith("}");
+}
 
 // Symbols that always want a real visual gap around them, not just the bare
 // minimum needed to stop a control word from swallowing the next letter.
-// Quantifiers (\forall/\exists) and \text{s.t.} are "Ord"-class in TeX and
-// get *no* automatic spacing from adjacent atoms; relations/connectives are
+// Quantifiers (\forall/\exists) are "Ord"-class in TeX and get *no*
+// automatic spacing from adjacent atoms; relations/connectives are
 // "Rel"-class and TeX normally spaces those on its own, but we make it
 // explicit here too so the source is unambiguous and doesn't rely on a
 // human adding a comma just to force a gap. A literal " " is not enough —
 // TeX ignores raw whitespace in math mode — so this uses "\ ", a real
-// spacing command.
+// spacing command. (\text{...} — "s.t." included — gets the same treatment
+// via isTextCommand above, matched structurally since its content varies.)
 const SPACED_OPERATORS = new Set([
   "\\forall",
   "\\exists",
@@ -30,7 +41,6 @@ const SPACED_OPERATORS = new Set([
   "\\gets",
   "\\in",
   "\\notin",
-  "\\text{s.t.}",
   "=",
   "<",
   ">",
@@ -45,7 +55,12 @@ function joinTight(parts: string[]): string {
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     if (out) {
-      if (SPACED_OPERATORS.has(parts[i - 1]) || SPACED_OPERATORS.has(part)) {
+      if (
+        SPACED_OPERATORS.has(parts[i - 1]) ||
+        SPACED_OPERATORS.has(part) ||
+        isTextCommand(parts[i - 1]) ||
+        isTextCommand(part)
+      ) {
         out += "\\ ";
       } else if (endsWithControlWord(out) && startsWithBareLetter(part)) {
         out += " ";

@@ -117,6 +117,30 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
+    // "text(...)" captures its raw, unparsed inner text up to the matching
+    // close paren (tracking nested parens) as a single token — the escape
+    // hatch for plain upright/roman prose inside math (\text), which would
+    // otherwise get chewed up by the shorthand grammar letter-by-letter
+    // (e.g. "in", "to", "st" inside a phrase would turn into ∈, →, "s.t."
+    // instead of staying literal words). Checked before the letter branch so
+    // "text" doesn't get tokenized as an ordinary identifier first.
+    if (input.startsWith("text(", i)) {
+      const start = i;
+      let depth = 0;
+      let j = i + 4; // the '(' that opens the span
+      do {
+        if (input[j] === "(") depth++;
+        else if (input[j] === ")") depth--;
+        j++;
+      } while (depth > 0 && j < n);
+      if (depth !== 0) {
+        throw new MathSyntaxError('Missing closing ")" for "text("', start);
+      }
+      tokens.push({ type: "TEXT_LITERAL", value: input.slice(i + 5, j - 1), pos: start });
+      i = j;
+      continue;
+    }
+
     if (isDigit(ch)) {
       const start = i;
       let numStr = "";

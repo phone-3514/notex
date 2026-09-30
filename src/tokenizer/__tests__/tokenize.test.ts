@@ -119,4 +119,19 @@ describe("tokenize", () => {
       ["EOF", ""],
     ]);
   });
+
+  it('tokenizes "text(...)" as a single TEXT_LITERAL, tracking nested parens', () => {
+    expect(tokenize("text(hello world)").map((t) => [t.type, t.value])).toEqual([
+      ["TEXT_LITERAL", "hello world"],
+      ["EOF", ""],
+    ]);
+    expect(tokenize("text(cost (approx))").map((t) => [t.type, t.value])).toEqual([
+      ["TEXT_LITERAL", "cost (approx)"],
+      ["EOF", ""],
+    ]);
+  });
+
+  it('throws MathSyntaxError on an unterminated "text("', () => {
+    expect(() => tokenize("text(hello")).toThrow(MathSyntaxError);
+  });
 });
