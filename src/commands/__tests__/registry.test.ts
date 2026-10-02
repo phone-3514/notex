@@ -123,7 +123,7 @@ describe("COMMAND_ROWS", () => {
     expect(hl.rendered).toBe("====");
 
     const t = noteRows.find((r) => r.command === ";t")!;
-    expect(t.rendered).toBe("@text()@");
+    expect(t.rendered).toBe("text()");
   });
 
   it("includes all keyboard shortcuts", () => {

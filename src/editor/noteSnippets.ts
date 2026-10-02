@@ -51,10 +51,10 @@ export const NOTE_SNIPPETS: NoteSnippet[] = [
   { trigger: ";m", expansion: "= " },
   { trigger: ";i", expansion: "@@", cursorOffset: 1 },
   { trigger: ";hl", expansion: "====", cursorOffset: 2 },
-  // Full inline-math span wrapping a ready-to-type "text(...)" call (see
-  // parser/parseMath.ts) — cursor lands inside the parens, between "text("
-  // and ")@", same idea as ";i"'s bare "@@" but pre-filled for text().
-  { trigger: ";t", expansion: "@text()@", cursorOffset: 6 },
+  // "text(...)" (see parser/parseMath.ts), cursor inside the parens — bare,
+  // not wrapped in "@...@", since this is meant to be typed while already
+  // inside a math span (an existing "@...@" or "= " line), not to start one.
+  { trigger: ";t", expansion: "text()", cursorOffset: 5 },
   mathBlockSnippet(";align", "align"),
   mathBlockSnippet(";matrix", "matrix"),
 ];
