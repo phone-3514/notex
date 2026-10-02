@@ -204,14 +204,21 @@ describe("renderMarkdownToHtml", () => {
     // extractor sees it exactly where the formula visually sits.
     it("places a non-positioned raw-TeX companion span immediately before each formula", () => {
       const html = renderMarkdownToHtml("実数値関数 @f,g : N to R@ に対し");
-      const match = html.match(/<span class="katex-pdf-text" aria-hidden="true">([^<]*)<\/span><span class="katex">/);
+      const match = html.match(/<span class="katex-pdf-text" aria-hidden="true" style="display:none">([^<]*)<\/span><span class="katex">/);
       expect(match).not.toBeNull();
       expect(match![1]).toBe("f,\\;g:\\mathbb{N}\\to\\mathbb{R}");
     });
 
     it("HTML-escapes the raw TeX source inside the companion span", () => {
       const html = renderMarkdownToHtml("@a<b@");
-      expect(html).toContain('<span class="katex-pdf-text" aria-hidden="true">a\\ &lt;\\ b</span>');
+      expect(html).toContain('<span class="katex-pdf-text" aria-hidden="true" style="display:none">a\\ &lt;\\ b</span>');
+    });
+
+    it("hides the companion span inline, independent of any stylesheet", () => {
+      // Regression: relying on a stylesheet rule alone meant a stale/missing
+      // stylesheet leaked the raw TeX source onto the screen next to every
+      // formula.
+      expect(renderMarkdownToHtml("@x@")).toContain('class="katex-pdf-text" aria-hidden="true" style="display:none"');
     });
 
     it("does not emit KaTeX's MathML tree (redundant now, and itself positioned/reordered)", () => {

@@ -50,7 +50,11 @@ function escapeHtml(s: string): string {
 // layout, selection, and copy/paste are unaffected either way.
 function renderKatex(latex: string, displayMode: boolean): string {
   const visual = katex.renderToString(latex, { throwOnError: true, displayMode, output: "html" });
-  const fallback = `<span class="katex-pdf-text" aria-hidden="true">${escapeHtml(latex)}</span>`;
+  // The inline display:none (rather than relying on a stylesheet rule alone)
+  // is what guarantees this raw TeX never shows on screen even if the
+  // stylesheet is stale, missing, or overridden; the @media print rule in
+  // globals.css re-enables it with !important, which beats inline styles.
+  const fallback = `<span class="katex-pdf-text" aria-hidden="true" style="display:none">${escapeHtml(latex)}</span>`;
   return `${fallback}${visual}`;
 }
 

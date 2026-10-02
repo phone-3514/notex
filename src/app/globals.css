@@ -141,7 +141,9 @@ body {
      it is — just invisible, via transparent ink rather than display:none,
      so it still emits real, correctly-placed text into the PDF. */
   .prose-mathnote .katex-pdf-text {
-    display: inline;
+    /* !important: the span carries an inline display:none (see renderKatex),
+       which only an !important author rule can override. */
+    display: inline !important;
     color: transparent;
     /* Real (positive) font-size, or the run is dropped from the PDF's text
        layer entirely instead of just being invisible — but a fraction of a
