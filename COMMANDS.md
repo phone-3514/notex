@@ -473,6 +473,7 @@ Intentionally unsupported / ambiguous forms:
 | `;m` | =  | `—` | `;m + Tab` |
 | `;i` | @@ | `—` | `;i + Tab` |
 | `;hl` | ==== | `—` | `;hl + Tab` |
+| `;t` | @text()@ | `—` | `;t + Tab` |
 | `;align` | = align<br><br>end | `—` | `;align + Tab` |
 | `;matrix` | = matrix<br><br>end | `—` | `;matrix + Tab` |
 

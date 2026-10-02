@@ -102,6 +102,7 @@ describe("COMMAND_ROWS", () => {
         ";m",
         ";i",
         ";hl",
+        ";t",
         ";align",
         ";matrix",
       ].sort()
@@ -120,6 +121,9 @@ describe("COMMAND_ROWS", () => {
 
     const hl = noteRows.find((r) => r.command === ";hl")!;
     expect(hl.rendered).toBe("====");
+
+    const t = noteRows.find((r) => r.command === ";t")!;
+    expect(t.rendered).toBe("@text()@");
   });
 
   it("includes all keyboard shortcuts", () => {
