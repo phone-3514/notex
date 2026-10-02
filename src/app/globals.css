@@ -114,6 +114,12 @@ body {
   color: #f87171;
   border-bottom-color: #f87171;
 }
+.prose-mathnote .text-highlight {
+  color: #b91c1c;
+}
+.dark .prose-mathnote .text-highlight {
+  color: #f87171;
+}
 
 /* Invisible, non-positioned raw-TeX-source companion to each rendered
    formula (see renderKatex in renderer/markdown.ts) — irrelevant on screen,

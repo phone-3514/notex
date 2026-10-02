@@ -236,17 +236,31 @@ export function collectBlockRows(lines: string[], start: number): { rows: string
   return { rows, hasEnd, endIdx };
 }
 
-// Bold + plain text, HTML-escaped. Applied to text that has already had
-// inline math segments removed.
+// Bold ("**text**") + highlight ("==text==", rendered in red — the
+// "important, pay attention" marker) + plain text, HTML-escaped. Applied to
+// text that has already had inline math segments removed. Neither span
+// recursively parses the other's delimiter inside it (matching "**", which
+// never has — whichever pattern matches first at a given position just
+// swallows its content as plain, escaped text).
+const INLINE_STYLE_RE = /\*\*([^*]+)\*\*|==([^=]+)==/g;
+
 function renderBoldAndEscape(segment: string): string {
-  const regex = /\*\*([^*]+)\*\*/g;
   let out = "";
   let lastIndex = 0;
   let m: RegExpExecArray | null;
-  while ((m = regex.exec(segment))) {
+  // INLINE_STYLE_RE is a shared module-level /g regex (reused across many
+  // calls, one per paragraph/heading/list-item), so its lastIndex must be
+  // reset before every scan — otherwise a later call picks up mid-string
+  // from wherever the previous call's last match left off.
+  INLINE_STYLE_RE.lastIndex = 0;
+  while ((m = INLINE_STYLE_RE.exec(segment))) {
     out += escapeHtml(segment.slice(lastIndex, m.index));
-    out += `<strong>${escapeHtml(m[1])}</strong>`;
-    lastIndex = regex.lastIndex;
+    if (m[1] !== undefined) {
+      out += `<strong>${escapeHtml(m[1])}</strong>`;
+    } else {
+      out += `<span class="text-highlight">${escapeHtml(m[2]!)}</span>`;
+    }
+    lastIndex = INLINE_STYLE_RE.lastIndex;
   }
   out += escapeHtml(segment.slice(lastIndex));
   return out;

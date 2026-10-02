@@ -472,6 +472,7 @@ Intentionally unsupported / ambiguous forms:
 | `;lecture` | # 講義タイトル<br>日付：<br>## 要点 | `—` | `;lecture + Tab` |
 | `;m` | =  | `—` | `;m + Tab` |
 | `;i` | @@ | `—` | `;i + Tab` |
+| `;hl` | ==== | `—` | `;hl + Tab` |
 | `;align` | = align<br><br>end | `—` | `;align + Tab` |
 | `;matrix` | = matrix<br><br>end | `—` | `;matrix + Tab` |
 

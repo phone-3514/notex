@@ -50,6 +50,7 @@ export const NOTE_SNIPPETS: NoteSnippet[] = [
   { trigger: ";lecture", expansion: "# 講義タイトル\n日付：\n## 要点" },
   { trigger: ";m", expansion: "= " },
   { trigger: ";i", expansion: "@@", cursorOffset: 1 },
+  { trigger: ";hl", expansion: "====", cursorOffset: 2 },
   mathBlockSnippet(";align", "align"),
   mathBlockSnippet(";matrix", "matrix"),
 ];

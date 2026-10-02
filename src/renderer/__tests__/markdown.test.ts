@@ -20,6 +20,22 @@ describe("renderMarkdownToHtml", () => {
     expect(renderMarkdownToHtml("**hi**")).toBe('<p data-src-line="0"><strong>hi</strong></p>');
   });
 
+  it("renders ==highlighted== text as a red span", () => {
+    expect(renderMarkdownToHtml("==hi==")).toBe(
+      '<p data-src-line="0"><span class="text-highlight">hi</span></p>'
+    );
+  });
+
+  it("bold and highlight can appear in the same line, in either order", () => {
+    expect(renderMarkdownToHtml("**bold** and ==red== text")).toBe(
+      '<p data-src-line="0"><strong>bold</strong> and <span class="text-highlight">red</span> text</p>'
+    );
+  });
+
+  it("escapes HTML inside a highlighted span", () => {
+    expect(renderMarkdownToHtml("==<script>==")).not.toContain("<script>");
+  });
+
   it("tags blocks with their source line for preview scroll-sync", () => {
     const html = renderMarkdownToHtml("# Title\n\nsecond paragraph\n\nthird paragraph");
     expect(html).toContain('data-src-line="0"'); // heading

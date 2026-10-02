@@ -23,8 +23,9 @@ describe("noteToMarkdown", () => {
     expect(noteToMarkdown("$$sqrt(x+y)$$")).toBe("$$\\sqrt{x+y}$$\n");
   });
 
-  it("passes bold text and lists through unchanged (already standard Markdown)", () => {
+  it("passes bold text, highlight, and lists through unchanged (already standard Markdown)", () => {
     expect(noteToMarkdown("**hi**")).toBe("**hi**\n");
+    expect(noteToMarkdown("==hi==")).toBe("==hi==\n");
     expect(noteToMarkdown("- a\n- b")).toBe("- a\n- b\n");
     expect(noteToMarkdown("1. a\n2. b")).toBe("1. a\n2. b\n");
   });
