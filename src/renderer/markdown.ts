@@ -2,7 +2,7 @@ import katex from "katex";
 import { nodeToLatex, shorthandToLatex } from "./mathToLatex";
 import { parseMath } from "@/parser/parseMath";
 import type { MathNode } from "@/parser/ast";
-import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE } from "./noteBlocks";
+import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE, MATH_MODE_OPEN_RE } from "./noteBlocks";
 
 // Explicit math boundaries only — nothing here ever guesses that a line of
 // plain text is "probably math". A line becomes math only via:
@@ -347,6 +347,32 @@ export const UNORDERED_RE = /^[-*+]\s+(.*)$/;
 export const ORDERED_RE = /^\d+\.\s+(.*)$/;
 export const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 
+// Rewrites the body of a ":::math" region into ordinary "= "-prefixed lines
+// so the normal display-math machinery (single equations and the multi-line
+// cases/align/matrix blocks) handles it unchanged. One output line per input
+// line, so source-line anchors stay valid. A line already starting with "= "
+// is accepted as-is, and the raw rows of a multi-line block (up to its "end")
+// are passed through untouched — they must not gain a prefix of their own.
+export function mathModeBodyLines(lines: string[]): string[] {
+  const out: string[] = [];
+  let inBlock = false;
+  for (const line of lines) {
+    if (inBlock) {
+      out.push(line);
+      if (line.trim() === "end") inBlock = false;
+      continue;
+    }
+    if (line.trim() === "") {
+      out.push(line);
+      continue;
+    }
+    const expr = DISPLAY_PREFIX_RE.exec(line)?.[1] ?? line;
+    out.push(`= ${expr}`);
+    if (CASES_OPEN_RE.test(expr) || ALIGN_OPEN_RE.test(expr) || MATRIX_OPEN_RE.test(expr)) inBlock = true;
+  }
+  return out;
+}
+
 // `baseLine` is the 0-indexed source line the chunk starts at, so every
 // emitted block can be tagged with `data-src-line` — the anchor the preview
 // scroll-sync (SplitView/Preview) uses to map the editor cursor to a block.
@@ -360,6 +386,21 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
 
     if (line.trim() === "") {
       i++;
+      continue;
+    }
+
+    // Math-mode region: ":::math\n...\n:::" — every line is display math
+    // (see mathModeBodyLines). No box/title; the equations render inline in
+    // the flow, each with its own data-src-line.
+    if (MATH_MODE_OPEN_RE.test(line)) {
+      i++;
+      const bodyStart = i;
+      while (i < lines.length && lines[i].trim() !== NOTE_BLOCK_CLOSE) {
+        i++;
+      }
+      const bodyLines = lines.slice(bodyStart, i);
+      if (i < lines.length) i++;
+      out.push(renderMarkdownBlocks(mathModeBodyLines(bodyLines).join("\n"), baseLine + bodyStart));
       continue;
     }
 

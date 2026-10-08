@@ -95,6 +95,7 @@ describe("COMMAND_ROWS", () => {
         ";rem",
         ";ex",
         ";box",
+        ";math",
         ";pf",
         ";remark",
         ";qed",
@@ -113,6 +114,9 @@ describe("COMMAND_ROWS", () => {
 
     const box = noteRows.find((r) => r.command === ";box")!;
     expect(box.rendered).toBe(":::box \n\n:::");
+
+    const mathMode = noteRows.find((r) => r.command === ";math")!;
+    expect(mathMode.rendered).toBe(":::math\n\n:::");
 
     const m = noteRows.find((r) => r.command === ";m")!;
     expect(m.rendered).toBe("= ");

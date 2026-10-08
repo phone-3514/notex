@@ -17,6 +17,13 @@ export const NOTE_BLOCK_LABELS: Record<string, string> = {
 export const NOTE_BLOCK_OPEN_RE = /^:::(\w+)(?:\s+(.*))?$/;
 export const NOTE_BLOCK_CLOSE = ":::";
 
+// ":::math ... :::" is a math-mode region rather than a titled box: every
+// non-blank line inside is treated as if it began with "= " (display math),
+// so derivations can be written without "@...@"/"= " on each line — prose
+// inside it goes through text(...). It's matched before NOTE_BLOCK_OPEN_RE's
+// type lookup (and has no label), so it never reaches resolveNoteBlockTitle.
+export const MATH_MODE_OPEN_RE = /^:::math\s*$/;
+
 // ":::box <title>" is the escape hatch for a box outside the fixed
 // vocabulary above: instead of a looked-up Japanese label, the text after
 // "box" is used verbatim as the title — e.g. ":::box よく使う不等式" renders

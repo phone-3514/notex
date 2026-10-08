@@ -52,6 +52,14 @@ const STRUCTURAL_ROWS: CommandRow[] = [
   mathRow("vec(x,y,...) (row vector)", "vec(a,b,c)", "Vectors"),
   mathRow("colvec(x,y,...) (column vector)", "colvec(a,b,c)", "Vectors"),
   mathRow("bf(x) (bold vector/matrix, no arrow)", "bf(v)", "Vectors"),
+  mathRow("tilde(x) (tilde accent, x with ~ on top)", "tilde(x)", "Accents"),
+  mathRow("widetilde(x) (wide tilde)", "widetilde(x+y)", "Accents"),
+  mathRow("hat(x) (hat accent)", "hat(x)", "Accents"),
+  mathRow("widehat(x) (wide hat)", "widehat(x+y)", "Accents"),
+  mathRow("bar(x) (short bar over x)", "bar(x)", "Accents"),
+  mathRow("dot(x) (dot over x, time derivative)", "dot(x)", "Accents"),
+  mathRow("ddot(x) (double dot over x)", "ddot(x)", "Accents"),
+  mathRow("underline(x) (line under x)", "underline(x)", "Accents"),
   mathRow("closure(x) (topological/algebraic closure, conjugate)", "closure(A)", "Sets"),
   // "\X" escapes a letter-run out of every shorthand meaning (blackboard
   // sets, function names, Greek letters, compact subscripts) — e.g. plain

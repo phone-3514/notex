@@ -197,6 +197,20 @@ export const WORD_KEYWORDS: Record<string, string> = {
 };
 
 // Prefix keywords that trigger special AST nodes (handled explicitly by the parser).
+// Single-argument accent functions: "tilde(x)" -> \\tilde{x}, etc. Written
+// as a function rather than a "~" suffix because "~" is already the
+// bounds separator for sum/int/lim ("sum n=1~oo").
+export const ACCENT_COMMANDS: Record<string, string> = {
+  tilde: "\\tilde",
+  widetilde: "\\widetilde",
+  hat: "\\hat",
+  widehat: "\\widehat",
+  bar: "\\bar",
+  dot: "\\dot",
+  ddot: "\\ddot",
+  underline: "\\underline",
+};
+
 export const STRUCTURAL_KEYWORDS = new Set([
   "sum",
   "prod",
@@ -213,6 +227,7 @@ export const STRUCTURAL_KEYWORDS = new Set([
   "colvec",
   "bf",
   "closure",
+  ...Object.keys(ACCENT_COMMANDS),
 ]);
 
 export const RELATION_SYMBOLS: Record<string, string> = {

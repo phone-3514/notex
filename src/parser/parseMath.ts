@@ -3,6 +3,7 @@ import { MathSyntaxError, Token } from "@/tokenizer/types";
 import { MathNode } from "./ast";
 import {
   STRUCTURAL_KEYWORDS,
+  ACCENT_COMMANDS,
   WORD_KEYWORDS,
   GREEK_LETTERS,
   BLACKBOARD_LETTERS,
@@ -444,6 +445,9 @@ class Parser {
           return this.parseBold();
         case "closure":
           return this.parseOverline();
+      }
+      if (ACCENT_COMMANDS[word]) {
+        return { kind: "Accent", command: ACCENT_COMMANDS[word], arg: this.unwrapGroup(this.parseAtom()) };
       }
     }
 

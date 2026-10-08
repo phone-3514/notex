@@ -104,6 +104,8 @@ export function nodeToLatex(node: MathNode): string {
       return `\\sqrt${braces(nodeToLatex(node.arg))}`;
     case "Bold":
       return `\\boldsymbol${braces(nodeToLatex(node.arg))}`;
+    case "Accent":
+      return `${node.command}${braces(nodeToLatex(node.arg))}`;
     case "Overline":
       return `\\overline${braces(nodeToLatex(node.arg))}`;
     case "Func": {

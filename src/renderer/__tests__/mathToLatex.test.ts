@@ -492,6 +492,25 @@ describe("shorthandToLatex — vectors", () => {
     expect(shorthandToLatex("closure x")).toBe("\\overline{x}");
   });
 
+  it("accent functions: tilde/hat/bar/dot/ddot/widetilde/widehat/underline", () => {
+    expect(shorthandToLatex("tilde(x)")).toBe("\\tilde{x}");
+    expect(shorthandToLatex("tilde x")).toBe("\\tilde{x}");
+    expect(shorthandToLatex("hat(x)")).toBe("\\hat{x}");
+    expect(shorthandToLatex("bar(x)")).toBe("\\bar{x}");
+    expect(shorthandToLatex("dot(x)")).toBe("\\dot{x}");
+    expect(shorthandToLatex("ddot(x)")).toBe("\\ddot{x}");
+    expect(shorthandToLatex("widetilde(x+y)")).toBe("\\widetilde{x+y}");
+    expect(shorthandToLatex("widehat(x+y)")).toBe("\\widehat{x+y}");
+    expect(shorthandToLatex("underline(x)")).toBe("\\underline{x}");
+  });
+
+  it("accents compose with subscripts, powers and the rest of the DSL", () => {
+    expect(shorthandToLatex("tilde(x)^2")).toBe("\\tilde{x}^{2}");
+    expect(shorthandToLatex("tilde(x1)+hat(y)")).toBe("\\tilde{x_{1}}+\\hat{y}");
+    expect(shorthandToLatex("tilde(alpha)")).toBe("\\tilde{\\alpha}");
+    expect(shorthandToLatex("sum n=1~oo tilde(a)")).toContain("\\tilde{a}");
+  });
+
   it("closure composes with the rest of the DSL like bf/sqrt", () => {
     expect(shorthandToLatex("closure(A cup B)")).toBe("\\overline{A\\cup B}");
     expect(shorthandToLatex("closure(z)_1")).toBe("\\overline{z}_{1}");

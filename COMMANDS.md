@@ -214,6 +214,19 @@ Intentionally unsupported / ambiguous forms:
 | `<v> (inner product / span / generator notation)` | \langle v\rangle | `\langle v\rangle` | `<v>` |
 | `<u,v> (e.g. inner product of two vectors)` | \langle u,v\rangle | `\langle u,v\rangle` | `<u,v>` |
 
+## Accents
+
+| Command | Result | LaTeX | Example |
+| --- | --- | --- | --- |
+| `tilde(x) (tilde accent, x with ~ on top)` | \tilde{x} | `\tilde{x}` | `tilde(x)` |
+| `widetilde(x) (wide tilde)` | \widetilde{x+y} | `\widetilde{x+y}` | `widetilde(x+y)` |
+| `hat(x) (hat accent)` | \hat{x} | `\hat{x}` | `hat(x)` |
+| `widehat(x) (wide hat)` | \widehat{x+y} | `\widehat{x+y}` | `widehat(x+y)` |
+| `bar(x) (short bar over x)` | \bar{x} | `\bar{x}` | `bar(x)` |
+| `dot(x) (dot over x, time derivative)` | \dot{x} | `\dot{x}` | `dot(x)` |
+| `ddot(x) (double dot over x)` | \ddot{x} | `\ddot{x}` | `ddot(x)` |
+| `underline(x) (line under x)` | \underline{x} | `\underline{x}` | `underline(x)` |
+
 ## Symbols
 
 | Command | Result | LaTeX | Example |
@@ -466,6 +479,7 @@ Intentionally unsupported / ambiguous forms:
 | `;rem` | :::remark<br><br>::: | `—` | `;rem + Tab` |
 | `;ex` | :::example<br><br>::: | `—` | `;ex + Tab` |
 | `;box` | :::box <br><br>::: | `—` | `;box + Tab` |
+| `;math` | :::math<br><br>::: | `—` | `;math + Tab` |
 | `;pf` | ## 証明 | `—` | `;pf + Tab` |
 | `;remark` | ## 注意 | `—` | `;remark + Tab` |
 | `;qed` | □ | `—` | `;qed + Tab` |

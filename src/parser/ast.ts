@@ -10,6 +10,7 @@ export type MathNode =
   | { kind: "Sub"; base: MathNode; sub: MathNode }
   | { kind: "Sqrt"; arg: MathNode }
   | { kind: "Bold"; arg: MathNode } // bf(x): boldface vector/matrix notation (\boldsymbol), the non-arrow alternative to vec(x)
+  | { kind: "Accent"; command: string; arg: MathNode } // tilde(x)/hat(x)/bar(x)/dot(x)...: accent over a symbol (command is the LaTeX control word, e.g. "\\tilde")
   | { kind: "Overline"; arg: MathNode } // closure(x): topological/algebraic closure, conjugate, etc. (\overline)
   | { kind: "Func"; name: string; arg: MathNode | null }
   | { kind: "Differential"; variable: string }

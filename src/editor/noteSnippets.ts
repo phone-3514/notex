@@ -34,6 +34,13 @@ function customBoxSnippet(trigger: string): NoteSnippet {
   return { trigger, expansion: `${open}\n\n:::`, cursorOffset: open.length };
 }
 
+// Inserts a ":::math\n\n:::" math-mode region (see renderer/noteBlocks.ts's
+// MATH_MODE_OPEN_RE): each line inside is display math without "= ".
+function mathModeSnippet(trigger: string): NoteSnippet {
+  const open = ":::math";
+  return { trigger, expansion: `${open}\n\n:::`, cursorOffset: open.length + 1 };
+}
+
 export const NOTE_SNIPPETS: NoteSnippet[] = [
   noteBlockSnippet(";thm", "theorem"),
   noteBlockSnippet(";def", "definition"),
@@ -44,6 +51,7 @@ export const NOTE_SNIPPETS: NoteSnippet[] = [
   noteBlockSnippet(";rem", "remark"),
   noteBlockSnippet(";ex", "example"),
   customBoxSnippet(";box"),
+  mathModeSnippet(";math"),
   { trigger: ";pf", expansion: "## 証明" },
   { trigger: ";remark", expansion: "## 注意" },
   { trigger: ";qed", expansion: "□" },

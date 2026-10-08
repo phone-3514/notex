@@ -34,8 +34,9 @@ import {
   buildAlignLatex,
   buildMatrixLatex,
   collectBlockRows,
+  mathModeBodyLines,
 } from "./markdown";
-import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE } from "./noteBlocks";
+import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE, MATH_MODE_OPEN_RE } from "./noteBlocks";
 
 function inlineMath(latex: string): string {
   return `$${latex}$`;
@@ -153,6 +154,19 @@ function exportMarkdownBlocks(chunk: string): string {
     if (line.trim() === "") {
       out.push("");
       i++;
+      continue;
+    }
+
+    // ":::math" region -> its lines as "$$...$$" equations (no label).
+    if (MATH_MODE_OPEN_RE.test(line)) {
+      i++;
+      const bodyStart = i;
+      while (i < lines.length && lines[i].trim() !== NOTE_BLOCK_CLOSE) {
+        i++;
+      }
+      const bodyLines = lines.slice(bodyStart, i);
+      if (i < lines.length) i++;
+      out.push(exportMarkdownBlocks(mathModeBodyLines(bodyLines).join("\n")));
       continue;
     }
 

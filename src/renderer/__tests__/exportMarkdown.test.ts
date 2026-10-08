@@ -65,6 +65,14 @@ describe("noteToMarkdown", () => {
     expect(md).toBe(":::box\n本文\n:::\n");
   });
 
+  it("converts a ':::math' region to one $$...$$ per line, with no label", () => {
+    const md = noteToMarkdown(":::math\nx^2+1\ntext(ただし) y>0\n:::\n後続");
+    expect(md).toContain("$$x^{2}+1$$");
+    expect(md).toContain("\\text{ただし}");
+    expect(md).toContain("後続");
+    expect(md).not.toContain(":::");
+  });
+
   it("flags an invalid inline expression without crashing or emitting fake LaTeX", () => {
     const md = noteToMarkdown("Bad @)(@ here.");
     expect(md).toContain("math error");
