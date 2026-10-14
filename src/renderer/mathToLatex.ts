@@ -131,7 +131,11 @@ export function nodeToLatex(node: MathNode): string {
       return joinTight([head, nodeToLatex(node.body)]);
     }
     case "Lim": {
-      const head = `\\lim_${braces(`${nodeToLatex(node.variable)}\\to${nodeToLatex(node.target)}`)}`;
+      // joinTight, not plain concatenation: "\to" followed by a bare-letter
+      // target ("lim x->a") must get a separating space or it lexes as the
+      // undefined control word "\toa".
+      const approach = joinTight([nodeToLatex(node.variable), "\\to", nodeToLatex(node.target)]);
+      const head = `\\lim_${braces(approach)}`;
       return joinTight([head, nodeToLatex(node.body)]);
     }
     case "Quantifier": {

@@ -441,13 +441,57 @@ Intentionally unsupported / ambiguous forms:
 | `sqsupset` | \sqsupset | `\sqsupset` | `sqsupset` |
 | `sqsupseteq` | \sqsupseteq | `\sqsupseteq` | `sqsupseteq` |
 
+## Binary Operators
+
+| Command | Result | LaTeX | Example |
+| --- | --- | --- | --- |
+| `dotplus` | \dotplus | `\dotplus` | `dotplus` |
+| `ltimes` | \ltimes | `\ltimes` | `ltimes` |
+| `rtimes` | \rtimes | `\rtimes` | `rtimes` |
+| `bowtie` | \bowtie | `\bowtie` | `bowtie` |
+| `smallsetminus` | \smallsetminus | `\smallsetminus` | `smallsetminus` |
+| `centerdot` | \centerdot | `\centerdot` | `centerdot` |
+| `circledast` | \circledast | `\circledast` | `circledast` |
+| `circledcirc` | \circledcirc | `\circledcirc` | `circledcirc` |
+| `circleddash` | \circleddash | `\circleddash` | `circleddash` |
+| `boxplus` | \boxplus | `\boxplus` | `boxplus` |
+| `boxminus` | \boxminus | `\boxminus` | `boxminus` |
+| `boxtimes` | \boxtimes | `\boxtimes` | `boxtimes` |
+| `boxdot` | \boxdot | `\boxdot` | `boxdot` |
+| `divideontimes` | \divideontimes | `\divideontimes` | `divideontimes` |
+| `barwedge` | \barwedge | `\barwedge` | `barwedge` |
+| `doublebarwedge` | \doublebarwedge | `\doublebarwedge` | `doublebarwedge` |
+| `veebar` | \veebar | `\veebar` | `veebar` |
+| `curlywedge` | \curlywedge | `\curlywedge` | `curlywedge` |
+| `curlyvee` | \curlyvee | `\curlyvee` | `curlyvee` |
+| `wedge` | \wedge | `\wedge` | `wedge` |
+| `vee` | \vee | `\vee` | `vee` |
+| `intercal` | \intercal | `\intercal` | `intercal` |
+| `amalg` | \amalg | `\amalg` | `amalg` |
+| `uplus` | \uplus | `\uplus` | `uplus` |
+| `Cup` | \Cup | `\Cup` | `Cup` |
+| `Cap` | \Cap | `\Cap` | `Cap` |
+| `bigtriangleup` | \bigtriangleup | `\bigtriangleup` | `bigtriangleup` |
+| `bigtriangledown` | \bigtriangledown | `\bigtriangledown` | `bigtriangledown` |
+| `triangleleft` | \triangleleft | `\triangleleft` | `triangleleft` |
+| `triangleright` | \triangleright | `\triangleright` | `triangleright` |
+| `lhd` | \lhd | `\lhd` | `lhd` |
+| `rhd` | \rhd | `\rhd` | `rhd` |
+| `unlhd` | \unlhd | `\unlhd` | `unlhd` |
+| `unrhd` | \unrhd | `\unrhd` | `unrhd` |
+| `leftthreetimes` | \leftthreetimes | `\leftthreetimes` | `leftthreetimes` |
+| `rightthreetimes` | \rightthreetimes | `\rightthreetimes` | `rightthreetimes` |
+| `dagger` | \dagger | `\dagger` | `dagger` |
+| `ddagger` | \ddagger | `\ddagger` | `ddagger` |
+| `diamond` | \diamond | `\diamond` | `diamond` |
+
 ## Autocomplete Snippet
 
 | Command | Result | LaTeX | Example |
 | --- | --- | --- | --- |
 | `su` | \sum_{n=1}^{\infty}\frac{1}{n} | `\sum_{n=1}^{\infty}\frac{1}{n}` | `sum n=1~oo 1/n` |
 | `int` | \int_{a}^{b}f(x)\,dx | `\int_{a}^{b}f(x)\,dx` | `int a~b f(x) dx` |
-| `lim` | \lim_{x\toa}f(x) | `\lim_{x\toa}f(x)` | `lim x->a f(x)` |
+| `lim` | \lim_{x\to a}f(x) | `\lim_{x\to a}f(x)` | `lim x->a f(x)` |
 | `sq` | \sqrt{x+y} | `\sqrt{x+y}` | `sqrt(x+y)` |
 | `frac` | \frac{(a+b)}{(c+d)} | `\frac{(a+b)}{(c+d)}` | `(a+b)/(c+d)` |
 | `prod` | \prod_{n=1}^{\infty}n | `\prod_{n=1}^{\infty}n` | `prod n=1~oo n` |

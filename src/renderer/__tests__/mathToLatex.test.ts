@@ -511,6 +511,23 @@ describe("shorthandToLatex — vectors", () => {
     expect(shorthandToLatex("sum n=1~oo tilde(a)")).toContain("\\tilde{a}");
   });
 
+  it("lim with a letter target gets a space after \\to (no undefined \\toa)", () => {
+    expect(shorthandToLatex("lim x->a f(x)")).toBe("\\lim_{x\\to a}f(x)");
+    expect(shorthandToLatex("lim x->0 f(x)")).toBe("\\lim_{x\\to0}f(x)");
+    expect(shorthandToLatex("lim n->oo an")).toContain("\\lim_{n\\to\\infty}");
+  });
+
+  it("binary operators: dotplus and the other amssymb-style operators", () => {
+    expect(shorthandToLatex("a dotplus b")).toBe("a\\dotplus b");
+    expect(shorthandToLatex("N ltimes H")).toBe("\\mathbb{N}\\ltimes\\mathbb{H}");
+    expect(shorthandToLatex("a boxplus b")).toBe("a\\boxplus b");
+    expect(shorthandToLatex("a circledast b")).toBe("a\\circledast b");
+    expect(shorthandToLatex("p wedge q")).toBe("p\\wedge q");
+    expect(shorthandToLatex("p vee q")).toBe("p\\vee q");
+    expect(shorthandToLatex("a uplus b")).toBe("a\\uplus b");
+    expect(shorthandToLatex("A bowtie B")).toBe("A\\bowtie B");
+  });
+
   it("closure composes with the rest of the DSL like bf/sqrt", () => {
     expect(shorthandToLatex("closure(A cup B)")).toBe("\\overline{A\\cup B}");
     expect(shorthandToLatex("closure(z)_1")).toBe("\\overline{z}_{1}");
