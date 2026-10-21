@@ -460,32 +460,45 @@ describe("renderMarkdownToHtml", () => {
     });
   });
 
-  describe(":::math (every line is display math)", () => {
-    it("renders each line as its own display equation, with no box", () => {
+  describe(":::math (every line is inline math; '= ' lines are display)", () => {
+    it("renders each plain line as inline math in one paragraph, with no box", () => {
       const html = renderMarkdownToHtml(":::math\nx^2+1\ny<=z\n:::");
-      expect(html.match(/class="math-display"/g)).toHaveLength(2);
+      expect(html).not.toContain("math-display");
       expect(html).not.toContain("note-block");
       expect(html).not.toContain("math-error");
       expect(html).not.toContain(":::");
+      expect(html.match(/<p /g)).toHaveLength(1);
+      expect(html.match(/class="katex"/g)).toHaveLength(2);
+      expect(html).toContain("<br />");
     });
 
-    it("accepts text(...) for prose and an optional leading '= '", () => {
+    it("keeps '= ' lines as display equations next to the inline ones", () => {
       const html = renderMarkdownToHtml(":::math\ntext(ただし) x>0\n= y=1\n:::");
-      expect(html.match(/class="math-display"/g)).toHaveLength(2);
+      expect(html.match(/class="math-display"/g)).toHaveLength(1);
       expect(html).toContain("\\text{ただし}");
       expect(html).not.toContain("math-error");
     });
 
-    it("keeps multi-line align/cases/matrix rows unprefixed", () => {
-      const html = renderMarkdownToHtml(":::math\nalign\nf(x)\n= x^2+2x+1\n= (x+1)^2\nend\nf(x)=cases\n1, x>0\n0, x<=0\nend\n:::");
+    it("supports the multi-line '= align' / '= <lhs>=cases' display blocks with raw rows", () => {
+      const html = renderMarkdownToHtml(
+        ":::math\n= align\nf(x)\n= x^2+2x+1\n= (x+1)^2\nend\n= f(x)=cases\n1, x>0\n0, x<=0\nend\n:::"
+      );
+      expect(html.match(/class="math-display"/g)).toHaveLength(2);
       expect(html).toContain("\\begin{aligned}");
       expect(html).toContain("\\begin{cases}");
       expect(html).not.toContain("math-error");
     });
 
+    it("leaves a line that already contains its own '@...@' span untouched", () => {
+      const html = renderMarkdownToHtml(":::math\n@x@ と @y@\n:::");
+      expect(html).not.toContain("math-error");
+      expect(html.match(/class="katex"/g)).toHaveLength(2);
+      expect(html).toContain("と");
+    });
+
     it("leaves content after the closing ::: as ordinary prose", () => {
       const html = renderMarkdownToHtml(":::math\nx\n:::\n普通の文章 @y@");
-      expect(html.match(/class="math-display"/g)).toHaveLength(1);
+      expect(html).not.toContain("math-display");
       expect(html).toContain("普通の文章");
     });
   });

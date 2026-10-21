@@ -18,10 +18,13 @@ export const NOTE_BLOCK_OPEN_RE = /^:::(\w+)(?:\s+(.*))?$/;
 export const NOTE_BLOCK_CLOSE = ":::";
 
 // ":::math ... :::" is a math-mode region rather than a titled box: every
-// non-blank line inside is treated as if it began with "= " (display math),
-// so derivations can be written without "@...@"/"= " on each line — prose
-// inside it goes through text(...). It's matched before NOTE_BLOCK_OPEN_RE's
-// type lookup (and has no label), so it never reaches resolveNoteBlockTitle.
+// non-blank line inside is treated as an inline "@...@" math span, so
+// derivations can be written without "@" on each line — prose inside it goes
+// through text(...). A line starting with "= " is still a display equation
+// (and "= align"/"= cases"/"= matrix" open the multi-line display blocks), so
+// display math inside the region uses the same syntax as everywhere else.
+// It's matched before NOTE_BLOCK_OPEN_RE's type lookup (and has no label), so
+// it never reaches resolveNoteBlockTitle.
 export const MATH_MODE_OPEN_RE = /^:::math\s*$/;
 
 // ":::box <title>" is the escape hatch for a box outside the fixed

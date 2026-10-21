@@ -62,12 +62,37 @@ class Parser {
   }
 
   parse(): MathNode {
-    const node = this.parseSequence();
-    const trailing = this.peek();
-    if (trailing.type !== "EOF") {
-      throw new MathSyntaxError(`Unexpected token "${trailing.value}"`, trailing.pos);
+    // A ")" with no matching "(" (e.g. "x))", "(x+1))*2") isn't an error: it's
+    // kept as a literal ")" and parsing resumes after it. Every other
+    // leftover token still is one.
+    const parts: MathNode[] = [];
+    while (this.peek().type !== "EOF") {
+      if (this.isSymbol(")")) {
+        this.next();
+        parts.push({ kind: "Sym", name: ")" });
+        continue;
+      }
+      parts.push(this.parseSequence());
+      const trailing = this.peek();
+      if (trailing.type !== "EOF" && !this.isSymbol(")")) {
+        throw new MathSyntaxError(`Unexpected token "${trailing.value}"`, trailing.pos);
+      }
     }
-    return node;
+    if (parts.length === 0) return this.parseSequence(); // empty input: report the usual error
+    return parts.length === 1 ? parts[0] : { kind: "Row", items: parts };
+  }
+
+  // True when the next token can't begin an operand, so a relation sitting
+  // right before it has nothing on that side ("x =", "= 9", "(= 9)", "a = = b").
+  // A bare "<" is excluded: it opens an angle group ("x = <v>"), a valid operand.
+  private atOperandEnd(): boolean {
+    const t = this.peek();
+    if (t.type === "EOF") return true;
+    if (t.type === "RELOP") return t.value !== "<";
+    if (t.type === "SYMBOL") {
+      return t.value === ")" || t.value === "}" || t.value === "," || (t.value === "|" && this.absDepth > 0);
+    }
+    return false;
   }
 
   // Comma-separated clauses, e.g. chained quantifiers:
@@ -85,10 +110,13 @@ class Parser {
 
   // Relational chain: a=b, eps>0, etc.
   private parseRel(): MathNode {
-    let left = this.parseAdd();
+    // A relation may be missing either operand ("= 9", "x ="): the absent
+    // side is an Empty node rather than a syntax error.
+    const startsWithRelop = this.peek().type === "RELOP" && this.peek().value !== "<";
+    let left: MathNode = startsWithRelop && !(this.angleDepth > 0 && this.peek().value === ">") ? { kind: "Empty" } : this.parseAdd();
     while (this.peek().type === "RELOP" && !(this.angleDepth > 0 && this.peek().value === ">")) {
       const opTok = this.next();
-      const right = this.parseAdd();
+      const right: MathNode = this.atOperandEnd() ? { kind: "Empty" } : this.parseAdd();
       left = { kind: "Relation", op: RELATION_SYMBOLS[opTok.value] ?? opTok.value, left, right };
     }
     // "|" as an infix "given/divides/such that" divider (e.g. "P(A|B)"
@@ -318,17 +346,24 @@ class Parser {
   // "f(x,y)", "(x,y)", "F(x1,...,xn)".
   private parseParenGroup(): MathNode {
     this.next(); // '('
-    const items = [this.parseRel()];
+    // "()" and "(a,)" have an Empty slot rather than being syntax errors.
+    const parseItem = (): MathNode =>
+      this.isSymbol(")") || this.isSymbol(",") || this.peek().type === "EOF" ? { kind: "Empty" } : this.parseRel();
+    const items = [parseItem()];
     while (this.isSymbol(",")) {
       this.next();
-      items.push(this.parseRel());
+      items.push(parseItem());
     }
     const close = this.peek();
-    if (!(close.type === "SYMBOL" && close.value === ")")) {
+    // A "(" never closed before the end of the expression ("x(", "(x+1") is
+    // kept as a literal "(" instead of an error; any other token where the
+    // ")" should be (e.g. "(x}") is still a real mistake.
+    const unclosed = close.type === "EOF";
+    if (!unclosed && !(close.type === "SYMBOL" && close.value === ")")) {
       throw new MathSyntaxError('Missing closing ")"', close.pos);
     }
-    this.next();
-    return items.length === 1 ? { kind: "Group", inner: items[0] } : { kind: "ArgList", items };
+    if (!unclosed) this.next();
+    return items.length === 1 ? { kind: "Group", inner: items[0], unclosed } : { kind: "ArgList", items, unclosed };
   }
 
   private parseAbsoluteValue(): MathNode {

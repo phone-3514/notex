@@ -29,8 +29,9 @@ export type MathNode =
       constraintOp: string | null;
       constraintValue: MathNode | null;
     }
-  | { kind: "Group"; inner: MathNode } // explicit parentheses, rendered literally
-  | { kind: "ArgList"; items: MathNode[] } // parenthesized comma list: f(x,y), (x,y), F(x1,...,xn)
+  | { kind: "Empty" } // a missing operand beside a relation or inside "()" — e.g. the left side of "= 9"; renders as nothing
+  | { kind: "Group"; inner: MathNode; unclosed?: boolean } // explicit parentheses, rendered literally (unclosed: no ")" was typed)
+  | { kind: "ArgList"; items: MathNode[]; unclosed?: boolean } // parenthesized comma list: f(x,y), (x,y), F(x1,...,xn)
   | { kind: "Infix"; op: "+" | "-" | "*"; left: MathNode; right: MathNode }
   | { kind: "Neg"; arg: MathNode } // unary minus, e.g. the "-x" branch of a cases block
   | { kind: "Vector"; style: "vec" | "colvec"; items: MathNode[] } // vec(a,b,c) / colvec(a,b,c)

@@ -347,12 +347,15 @@ export const UNORDERED_RE = /^[-*+]\s+(.*)$/;
 export const ORDERED_RE = /^\d+\.\s+(.*)$/;
 export const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 
-// Rewrites the body of a ":::math" region into ordinary "= "-prefixed lines
-// so the normal display-math machinery (single equations and the multi-line
-// cases/align/matrix blocks) handles it unchanged. One output line per input
-// line, so source-line anchors stay valid. A line already starting with "= "
-// is accepted as-is, and the raw rows of a multi-line block (up to its "end")
-// are passed through untouched — they must not gain a prefix of their own.
+// Rewrites the body of a ":::math" region into ordinary note lines. Each plain
+// line becomes an inline "@...@" math span (so consecutive lines read as one
+// paragraph, like "@...@" in prose); a line starting with "= " stays a
+// display equation exactly as it does outside the block, and "= align" /
+// "= <lhs>=cases" / "= matrix" open the usual multi-line display blocks, whose
+// raw rows (up to "end") are passed through untouched. One output line per
+// input line, so source-line anchors stay valid. A line that already contains
+// an "@" is left alone — wrapping it would pair up the wrong delimiters, and
+// the author is evidently mixing in their own "@...@" spans.
 export function mathModeBodyLines(lines: string[]): string[] {
   const out: string[] = [];
   let inBlock = false;
@@ -366,9 +369,14 @@ export function mathModeBodyLines(lines: string[]): string[] {
       out.push(line);
       continue;
     }
-    const expr = DISPLAY_PREFIX_RE.exec(line)?.[1] ?? line;
-    out.push(`= ${expr}`);
-    if (CASES_OPEN_RE.test(expr) || ALIGN_OPEN_RE.test(expr) || MATRIX_OPEN_RE.test(expr)) inBlock = true;
+    const display = DISPLAY_PREFIX_RE.exec(line);
+    if (display) {
+      out.push(line);
+      const expr = display[1];
+      if (CASES_OPEN_RE.test(expr) || ALIGN_OPEN_RE.test(expr) || MATRIX_OPEN_RE.test(expr)) inBlock = true;
+    } else {
+      out.push(line.includes("@") ? line : `@${line.trim()}@`);
+    }
   }
   return out;
 }
@@ -389,9 +397,8 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
       continue;
     }
 
-    // Math-mode region: ":::math\n...\n:::" — every line is display math
-    // (see mathModeBodyLines). No box/title; the equations render inline in
-    // the flow, each with its own data-src-line.
+    // Math-mode region: ":::math\n...\n:::" — every line is inline math,
+    // "= " lines are display math (see mathModeBodyLines). No box/title.
     if (MATH_MODE_OPEN_RE.test(line)) {
       i++;
       const bodyStart = i;

@@ -78,7 +78,7 @@ describe("shorthandToLatex — additional MVP coverage", () => {
 
   it("throws a clear, catchable error on malformed input instead of crashing", () => {
     expect(() => shorthandToLatex("1/")).toThrow(MathSyntaxError);
-    expect(() => shorthandToLatex("sqrt(x+y")).toThrow(MathSyntaxError);
+    expect(() => shorthandToLatex("(x}")).toThrow(MathSyntaxError);
     expect(() => shorthandToLatex("lim x 0")).toThrow(MathSyntaxError);
   });
 });
@@ -509,6 +509,57 @@ describe("shorthandToLatex — vectors", () => {
     expect(shorthandToLatex("tilde(x1)+hat(y)")).toBe("\\tilde{x_{1}}+\\hat{y}");
     expect(shorthandToLatex("tilde(alpha)")).toBe("\\tilde{\\alpha}");
     expect(shorthandToLatex("sum n=1~oo tilde(a)")).toContain("\\tilde{a}");
+  });
+
+  describe("dangling relations and parentheses are tolerated, not errors", () => {
+    it("a relation may lack its left, right, or both operands", () => {
+      expect(shorthandToLatex("x =")).toBe("x\\ =");
+      expect(shorthandToLatex("= x")).toBe("=\\ x");
+      expect(shorthandToLatex("=")).toBe("=");
+      expect(shorthandToLatex("a = = b")).toBe("a\\ =\\ =\\ b");
+      expect(shorthandToLatex("x>=")).toBe("x\\ \\geq");
+    });
+
+    it("a relation with no left operand inside parentheses: x( = 9)", () => {
+      expect(shorthandToLatex("x( = 9)")).toBe("x(=\\ 9)");
+      expect(shorthandToLatex("( = )")).toBe("(=)");
+    });
+
+    it("a ')' with no '(' is kept as a literal ')'", () => {
+      expect(shorthandToLatex("x)")).toBe("x)");
+      expect(shorthandToLatex("x))")).toBe("x))");
+      expect(shorthandToLatex("x = 9)")).toBe("x\\ =\\ 9)");
+      expect(shorthandToLatex(")")).toBe(")");
+    });
+
+    it("a '(' never closed is kept as a literal '('", () => {
+      expect(shorthandToLatex("x(")).toBe("x(");
+      expect(shorthandToLatex("(x")).toBe("(x");
+      expect(shorthandToLatex("((x)")).toBe("((x)");
+      expect(shorthandToLatex("a = (")).toBe("a\\ =\\ (");
+    });
+
+    it("empty parentheses and empty argument slots are fine", () => {
+      expect(shorthandToLatex("()")).toBe("()");
+      expect(shorthandToLatex("f(x,)")).toBe("f(x,)");
+    });
+
+    it("well-formed input is unaffected (angle brackets, abs, inequalities)", () => {
+      expect(shorthandToLatex("x = <v>")).toBe("x\\ =\\ \\langle v\\rangle");
+      expect(shorthandToLatex("x<y")).toBe("x\\ <\\ y");
+      expect(shorthandToLatex("P(A|B)")).toBe("P(A\\ \\mid\\ B)");
+    });
+
+    it("everything it produces is valid KaTeX", () => {
+      for (const src of ["x( = 9)", "x =", "= x", "x))", "(x", "()", "f(x,)", "a = = b", "注))"]) {
+        expect(() => katex.renderToString(shorthandToLatex(src), { throwOnError: true }), src).not.toThrow();
+      }
+    });
+
+    it("non-ASCII text passes through as upright text instead of erroring", () => {
+      expect(shorthandToLatex("注))")).toContain("\\text{注}");
+      expect(shorthandToLatex("注意 x=1")).toContain("\\text{注意}");
+    });
   });
 
   it("lim with a letter target gets a space after \\to (no undefined \\toa)", () => {

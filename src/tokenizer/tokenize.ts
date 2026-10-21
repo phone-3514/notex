@@ -192,6 +192,17 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
+    // Non-ASCII characters (Japanese prose, accented letters, etc.) have no
+    // math-shorthand meaning, so rather than erroring they pass through as
+    // upright text — the same token text(...) produces. A whole run is
+    // grouped so "注意" becomes one \text{注意}, not two adjacent ones.
+    if (/[^\x00-\x7f\s]/.test(ch)) {
+      const start = i;
+      while (i < n && /[^\x00-\x7f\s]/.test(input[i])) i++;
+      tokens.push({ type: "TEXT_LITERAL", value: input.slice(start, i), pos: start });
+      continue;
+    }
+
     throw new MathSyntaxError(`Unexpected character "${ch}"`, i);
   }
 

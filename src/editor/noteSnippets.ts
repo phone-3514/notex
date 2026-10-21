@@ -35,7 +35,8 @@ function customBoxSnippet(trigger: string): NoteSnippet {
 }
 
 // Inserts a ":::math\n\n:::" math-mode region (see renderer/noteBlocks.ts's
-// MATH_MODE_OPEN_RE): each line inside is display math without "= ".
+// MATH_MODE_OPEN_RE): each line inside is inline math without "@...@"
+// ("= " lines inside it are still display math).
 function mathModeSnippet(trigger: string): NoteSnippet {
   const open = ":::math";
   return { trigger, expansion: `${open}\n\n:::`, cursorOffset: open.length + 1 };

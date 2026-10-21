@@ -54,6 +54,9 @@ function joinTight(parts: string[]): string {
   let out = "";
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
+    // An Empty operand (missing side of a relation) contributes nothing —
+    // and no separator, so "= 9" doesn't start with a dangling "\ ".
+    if (part === "") continue;
     if (out) {
       if (
         SPACED_OPERATORS.has(parts[i - 1]) ||
@@ -146,12 +149,14 @@ export function nodeToLatex(node: MathNode): string {
       }
       return out;
     }
+    case "Empty":
+      return "";
     case "Group":
-      return `(${nodeToLatex(node.inner)})`;
+      return `(${nodeToLatex(node.inner)}${node.unclosed ? "" : ")"}`;
     case "ArgList":
       // Tight comma spacing, no gap: function args and tuples read as one
       // unit, unlike top-level "Sequence" clauses which get a "\;" gap.
-      return `(${node.items.map(nodeToLatex).join(",")})`;
+      return `(${node.items.map(nodeToLatex).join(",")}${node.unclosed ? "" : ")"}`;
     case "Infix":
       if (node.op === "*") {
         return joinTight([nodeToLatex(node.left), "\\cdot", nodeToLatex(node.right)]);
