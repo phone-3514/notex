@@ -74,6 +74,13 @@ describe("noteToMarkdown", () => {
     expect(md).not.toContain(":::");
   });
 
+  it("exports a ':::fig' block as a fenced 'fig' code block with its description", () => {
+    const md = noteToMarkdown("前\n\n:::fig 8x5\narrow 1,1 4,1\ntext 2,2 \"x_0\"\n:::\n\n後");
+    expect(md).toContain("```fig\n:::fig 8x5\narrow 1,1 4,1\ntext 2,2 \"x_0\"\n```");
+    expect(md).toContain("前");
+    expect(md).toContain("後");
+  });
+
   it("flags an invalid inline expression without crashing or emitting fake LaTeX", () => {
     const md = noteToMarkdown("Bad @1/@ here.");
     expect(md).toContain("math error");

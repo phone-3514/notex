@@ -96,6 +96,7 @@ describe("COMMAND_ROWS", () => {
         ";ex",
         ";box",
         ";math",
+        ";fig",
         ";pf",
         ";remark",
         ";qed",

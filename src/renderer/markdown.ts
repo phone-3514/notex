@@ -2,6 +2,8 @@ import katex from "katex";
 import { nodeToLatex, shorthandToLatex } from "./mathToLatex";
 import { parseMath } from "@/parser/parseMath";
 import type { MathNode } from "@/parser/ast";
+import { FIGURE_OPEN_RE, FIGURE_CLOSE, parseFigure } from "@/figure/figureText";
+import { renderFigureHtml } from "@/figure/renderFigure";
 import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE, MATH_MODE_OPEN_RE } from "./noteBlocks";
 
 // Explicit math boundaries only — nothing here ever guesses that a line of
@@ -68,6 +70,11 @@ function renderMath(raw: string, displayMode: boolean): string {
     const tag = displayMode ? "div" : "span";
     return `<${tag} class="math-error" title="${escapeHtml(message)}">${escapeHtml(trimmed)}</${tag}>`;
   }
+}
+
+// Inline math for callers outside this module (figure labels).
+export function renderInlineMath(raw: string): string {
+  return renderMath(raw, false);
 }
 
 // Piecewise/cases block: "<lhs>=cases\n<expr>, <condition>\n...\nend". Each
@@ -177,9 +184,14 @@ const MATRIX_ENV: Record<string, "pmatrix" | "bmatrix" | "vmatrix"> = {
 // no separate bracket-depth scanner to keep in sync with the grammar.
 function splitMatrixRow(row: string): MathNode[] {
   const wrapped = parseMath(`(${row.trim()})`);
-  if (wrapped.kind === "ArgList") return wrapped.items;
-  if (wrapped.kind === "Group") return [wrapped.inner];
-  return [wrapped];
+  const cells =
+    wrapped.kind === "ArgList" ? wrapped.items : wrapped.kind === "Group" ? [wrapped.inner] : [wrapped];
+  // The parser tolerates an empty slot in "(a,)" / "()", but a matrix cell
+  // with nothing in it is a mistake worth flagging.
+  if (cells.some((cell) => cell.kind === "Empty")) {
+    throw new Error("Empty matrix cell");
+  }
+  return cells;
 }
 
 // Matrix convention: a bare "..." cell means the horizontal omission dots
@@ -394,6 +406,23 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
 
     if (line.trim() === "") {
       i++;
+      continue;
+    }
+
+    // Figure block: ":::fig 12x8\n<shape lines>\n:::" — a small vector
+    // drawing (see src/figure). The body is a shape description, not note
+    // markup, so it is parsed by parseFigure rather than recursed into.
+    const figureOpen = FIGURE_OPEN_RE.exec(line);
+    if (figureOpen) {
+      const startLine = baseLine + i;
+      i++;
+      const bodyStart = i;
+      while (i < lines.length && lines[i].trim() !== FIGURE_CLOSE) {
+        i++;
+      }
+      const figure = parseFigure(figureOpen[1], figureOpen[2], lines.slice(bodyStart, i));
+      if (i < lines.length) i++;
+      out.push(renderFigureHtml(figure, startLine, (text) => renderMath(text, false)));
       continue;
     }
 

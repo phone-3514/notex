@@ -14,12 +14,21 @@ interface SplitViewProps {
   isNarrow: boolean;
   pageSettings: PageSettings;
   zoom: Zoom;
+  onEditFigure?: (line: number) => void;
 }
 
 const MIN_RATIO = 0.3;
 const MAX_RATIO = 0.7;
 
-export default function SplitView({ content, onChange, viewMode, isNarrow, pageSettings, zoom }: SplitViewProps) {
+export default function SplitView({
+  content,
+  onChange,
+  viewMode,
+  isNarrow,
+  pageSettings,
+  zoom,
+  onEditFigure,
+}: SplitViewProps) {
   const [ratio, setRatio] = useState(0.5);
   const [cursorLine, setCursorLine] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -87,7 +96,13 @@ export default function SplitView({ content, onChange, viewMode, isNarrow, pageS
         className="h-full min-w-0 overflow-y-auto overflow-x-hidden"
         style={{ width: previewWidth }}
       >
-        <Preview content={content} cursorLine={cursorLine} pageSettings={pageSettings} zoom={zoom} />
+        <Preview
+          content={content}
+          cursorLine={cursorLine}
+          pageSettings={pageSettings}
+          zoom={zoom}
+          onEditFigure={onEditFigure}
+        />
       </div>
     </div>
   );

@@ -42,6 +42,14 @@ function mathModeSnippet(trigger: string): NoteSnippet {
   return { trigger, expansion: `${open}\n\n:::`, cursorOffset: open.length + 1 };
 }
 
+// Inserts an empty ":::fig 12x8" figure block (see src/figure). The drawing
+// itself is made with the figure editor — the preview shows a "図を描く"
+// button on the empty block — not typed by hand.
+function figureSnippet(trigger: string): NoteSnippet {
+  const expansion = ":::fig 12x8\n:::";
+  return { trigger, expansion, cursorOffset: expansion.length };
+}
+
 export const NOTE_SNIPPETS: NoteSnippet[] = [
   noteBlockSnippet(";thm", "theorem"),
   noteBlockSnippet(";def", "definition"),
@@ -53,6 +61,7 @@ export const NOTE_SNIPPETS: NoteSnippet[] = [
   noteBlockSnippet(";ex", "example"),
   customBoxSnippet(";box"),
   mathModeSnippet(";math"),
+  figureSnippet(";fig"),
   { trigger: ";pf", expansion: "## 証明" },
   { trigger: ";remark", expansion: "## 注意" },
   { trigger: ";qed", expansion: "□" },

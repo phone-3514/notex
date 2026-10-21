@@ -36,6 +36,7 @@ import {
   collectBlockRows,
   mathModeBodyLines,
 } from "./markdown";
+import { FIGURE_OPEN_RE, FIGURE_CLOSE } from "@/figure/figureText";
 import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE, MATH_MODE_OPEN_RE } from "./noteBlocks";
 
 function inlineMath(latex: string): string {
@@ -154,6 +155,21 @@ function exportMarkdownBlocks(chunk: string): string {
     if (line.trim() === "") {
       out.push("");
       i++;
+      continue;
+    }
+
+    // Figure block -> a fenced "fig" code block carrying the shape
+    // description verbatim: plain text an LLM can read (lines, arrows,
+    // labelled points with coordinates), where a rendered image couldn't be.
+    if (FIGURE_OPEN_RE.test(line)) {
+      const bodyStart = i + 1;
+      let end = bodyStart;
+      while (end < lines.length && lines[end].trim() !== FIGURE_CLOSE) end++;
+      out.push("```fig");
+      out.push(...lines.slice(i, end).map((l) => l.trimEnd()));
+      out.push("```");
+      out.push("");
+      i = Math.min(end + 1, lines.length);
       continue;
     }
 

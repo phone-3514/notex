@@ -13,9 +13,12 @@ interface PreviewProps {
   cursorLine?: number;
   pageSettings: PageSettings;
   zoom: Zoom;
+  // Called with the 0-indexed note line of a ":::fig" block whose edit
+  // button was clicked.
+  onEditFigure?: (line: number) => void;
 }
 
-export default function Preview({ content, cursorLine, pageSettings, zoom }: PreviewProps) {
+export default function Preview({ content, cursorLine, pageSettings, zoom, onEditFigure }: PreviewProps) {
   const html = useMemo(() => renderMarkdownToHtml(content), [content]);
   // The scrollable viewport, not the page canvas below — previewScroll's
   // querySelectorAll/getBoundingClientRect calls only care that this is the
@@ -57,7 +60,17 @@ export default function Preview({ content, cursorLine, pageSettings, zoom }: Pre
           className="mn-page mx-auto bg-white text-neutral-900 shadow-sm border border-neutral-200"
           style={{ width: pageWidth, aspectRatio: `${width} / ${height}` }}
         >
-          <div className="prose-mathnote p-4 text-[17px] leading-[1.75]" dangerouslySetInnerHTML={{ __html: html }} />
+          {/* The preview HTML is a raw string, so the figure edit buttons it
+              contains are handled by one delegated click listener. */}
+          <div
+            className="prose-mathnote p-4 text-[17px] leading-[1.75]"
+            onClick={(e) => {
+              const button = (e.target as HTMLElement).closest<HTMLElement>("[data-fig-line]");
+              if (!button || !onEditFigure) return;
+              onEditFigure(Number(button.dataset.figLine));
+            }}
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
         </div>
       </div>
     </div>

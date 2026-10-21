@@ -5,6 +5,9 @@ import TopBar from "@/components/TopBar";
 import SplitView, { type ViewMode } from "@/components/SplitView";
 import CommandsModal from "@/components/CommandsModal";
 import SuggestionsPanel from "@/components/SuggestionsPanel";
+import FigureEditor from "@/components/FigureEditor";
+import { findFigureBlock, replaceFigureBlock } from "@/figure/figureText";
+import type { Figure } from "@/figure/types";
 import { useDarkMode, useIsNarrow, usePageSettings } from "@/components/hooks";
 import { useNoteStorage } from "@/storage/useNoteStorage";
 import { buildPageCssRule, DEFAULT_ZOOM, type Zoom } from "@/config/pageSettings";
@@ -19,6 +22,19 @@ export default function Home() {
   const { dark, toggle } = useDarkMode();
   const { settings: pageSettings, setSize: setPaperSize, setOrientation } = usePageSettings();
   const [zoom, setZoom] = useState<Zoom>(DEFAULT_ZOOM);
+  // The ":::fig" block (by its 0-indexed note line) open in the figure editor.
+  const [editingFigureLine, setEditingFigureLine] = useState<number | null>(null);
+  const editingFigure = editingFigureLine === null ? null : findFigureBlock(content, editingFigureLine);
+
+  const saveFigure = useCallback(
+    (figure: Figure) => {
+      if (editingFigureLine === null) return;
+      const next = replaceFigureBlock(content, editingFigureLine, figure);
+      if (next !== null) setContent(next);
+      setEditingFigureLine(null);
+    },
+    [content, editingFigureLine, setContent]
+  );
 
   const exportPdf = useCallback(() => {
     window.print();
@@ -105,7 +121,16 @@ export default function Home() {
         isNarrow={isNarrow}
         pageSettings={pageSettings}
         zoom={zoom}
+        onEditFigure={setEditingFigureLine}
       />
+      {editingFigure && (
+        <FigureEditor
+          key={editingFigureLine}
+          initial={editingFigure.figure}
+          onSave={saveFigure}
+          onCancel={() => setEditingFigureLine(null)}
+        />
+      )}
       <CommandsModal open={commandsOpen} onClose={() => setCommandsOpen(false)} />
     </div>
   );

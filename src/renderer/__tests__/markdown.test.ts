@@ -460,6 +460,31 @@ describe("renderMarkdownToHtml", () => {
     });
   });
 
+  describe(":::fig (drawing blocks)", () => {
+    it("renders the shapes as an SVG figure with an edit button anchored to its line", () => {
+      const html = renderMarkdownToHtml("前の文章\n\n:::fig 8x5\narrow 1,1 4,1\ntext 2,2 \"x_0\"\n:::\n\n後ろ");
+      expect(html).toContain('class="figure-block"');
+      expect(html).toContain('data-src-line="2"');
+      expect(html).toContain('data-fig-line="2"');
+      expect(html).toContain("<svg");
+      expect(html).toContain("katex"); // the label went through the math renderer
+      expect(html).not.toContain("math-error");
+      expect(html).toContain("後ろ");
+      expect(html).not.toContain(":::");
+    });
+
+    it("shows a placeholder with a draw button when empty", () => {
+      const html = renderMarkdownToHtml(":::fig 12x8\n:::");
+      expect(html).toContain("figure-empty");
+      expect(html).toContain("図を描く");
+    });
+
+    it("does not treat the body as note markup", () => {
+      const html = renderMarkdownToHtml(":::fig\n# not a heading\nline 0,0 1,1\n:::");
+      expect(html).not.toContain("<h1");
+    });
+  });
+
   describe(":::math (every line is inline math; '= ' lines are display)", () => {
     it("renders each plain line as inline math in one paragraph, with no box", () => {
       const html = renderMarkdownToHtml(":::math\nx^2+1\ny<=z\n:::");

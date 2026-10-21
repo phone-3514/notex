@@ -524,6 +524,7 @@ Intentionally unsupported / ambiguous forms:
 | `;ex` | :::example<br><br>::: | `—` | `;ex + Tab` |
 | `;box` | :::box <br><br>::: | `—` | `;box + Tab` |
 | `;math` | :::math<br><br>::: | `—` | `;math + Tab` |
+| `;fig` | :::fig 12x8<br>::: | `—` | `;fig + Tab` |
 | `;pf` | ## 証明 | `—` | `;pf + Tab` |
 | `;remark` | ## 注意 | `—` | `;remark + Tab` |
 | `;qed` | □ | `—` | `;qed + Tab` |
