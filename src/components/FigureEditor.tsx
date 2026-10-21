@@ -227,7 +227,10 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
       return;
     }
     if (tool === "text") {
-      setPendingText({ x: sx, y: sy, value: "" });
+      // The label input is created on pointer-up, not here: the browser moves
+      // focus to the (non-focusable) canvas as part of this same mouse press,
+      // which would immediately blur — and so dismiss — an input autofocused now.
+      dragRef.current = { tool, startX: sx, startY: sy };
       return;
     }
     dragRef.current = { tool, startX: sx, startY: sy };
@@ -237,6 +240,7 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     const drag = dragRef.current;
     if (!drag) return;
+    if (drag.tool === "text") return;
     const raw = toFigure(e);
     if (drag.tool === "select") {
       if (drag.index === undefined || !drag.base) return;
@@ -254,6 +258,10 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
     const drag = dragRef.current;
     dragRef.current = null;
     if (!drag) return;
+    if (drag.tool === "text") {
+      setPendingText({ x: drag.startX, y: drag.startY, value: "" });
+      return;
+    }
     if (drag.tool === "select") {
       // The move already updated `shapes` live; record the pre-move state for undo.
       if (drag.base && JSON.stringify(drag.base) !== JSON.stringify(shapes)) {
