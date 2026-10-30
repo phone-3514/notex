@@ -8,8 +8,11 @@ const ARROW_LEN = 11;
 const ARROW_HALF_WIDTH = 4.5;
 const DASH = "6 5";
 
+// "black" is the figure's default ink: currentColor, so it follows the
+// surrounding text colour (near-black on the page and in the PDF, themed on
+// screen) instead of being a fixed hex.
 const COLOR_HEX: Record<FigureColor, string> = {
-  black: "#171717",
+  black: "currentColor",
   red: "#b91c1c",
   blue: "#1d4ed8",
 };
@@ -112,7 +115,8 @@ export function figureLabelsHtml(fig: Figure, renderLabel: (text: string) => str
       if (s.kind !== "text") return "";
       const left = (s.x / fig.width) * 100;
       const top = ((fig.height - s.y) / fig.height) * 100;
-      return `<span class="figure-label" style="left:${n(left)}%;top:${n(top)}%;color:${COLOR_HEX[s.color]}">${renderLabel(s.text)}</span>`;
+      const color = s.color === "black" ? "" : `;color:${COLOR_HEX[s.color]}`;
+      return `<span class="figure-label" style="left:${n(left)}%;top:${n(top)}%${color}">${renderLabel(s.text)}</span>`;
     })
     .join("");
 }

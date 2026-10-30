@@ -347,7 +347,7 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
                   setColor(c.color);
                   restyleSelected({ color: c.color });
                 }}
-                className={`h-6 w-6 border-2 ${color === c.color ? "border-neutral-900 dark:border-neutral-100" : "border-transparent"}`}
+                className={`fig-swatch-${c.color} h-6 w-6 border-2 ${color === c.color ? "border-neutral-900 dark:border-neutral-100" : "border-transparent"}`}
                 style={{ background: c.css }}
               />
             ))}
@@ -427,7 +427,7 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
 
         <div className="flex justify-center overflow-auto bg-neutral-100 p-2 dark:bg-neutral-900">
           <div
-            className="relative bg-white"
+            className="relative bg-white dark:bg-black"
             style={{ width: `min(100%, ${width * UNIT * EDITOR_SCALE}px)`, aspectRatio: `${width} / ${height}` }}
           >
             <div className="absolute inset-0" dangerouslySetInnerHTML={{ __html: committedHtml }} />
@@ -477,7 +477,7 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
                   }
                 }}
                 onBlur={commitText}
-                className="absolute z-10 w-40 -translate-x-1/2 -translate-y-1/2 border border-blue-500 bg-white px-1 py-0.5 text-sm text-neutral-900"
+                className="absolute z-10 w-40 -translate-x-1/2 -translate-y-1/2 border border-blue-500 bg-white px-1 py-0.5 text-sm text-neutral-900 dark:border-red-500 dark:bg-black dark:text-neutral-100"
                 style={{
                   left: `${(pendingText.x / width) * 100}%`,
                   top: `${((height - pendingText.y) / height) * 100}%`,
@@ -495,7 +495,7 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
           <button
             type="button"
             onClick={save}
-            className="border border-blue-600 bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
+            className="border border-blue-600 bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 dark:border-red-500 dark:bg-red-600 dark:text-black dark:hover:bg-red-500"
           >
             保存
           </button>
