@@ -8,7 +8,7 @@ import SuggestionsPanel from "@/components/SuggestionsPanel";
 import FigureEditor from "@/components/FigureEditor";
 import { findFigureBlock, replaceFigureBlock } from "@/figure/figureText";
 import type { Figure } from "@/figure/types";
-import { useDarkMode, useIsNarrow, usePageSettings } from "@/components/hooks";
+import { useTheme, useIsNarrow, usePageSettings } from "@/components/hooks";
 import { useNoteStorage } from "@/storage/useNoteStorage";
 import { buildPageCssRule, DEFAULT_ZOOM, type Zoom } from "@/config/pageSettings";
 import { noteToMarkdown } from "@/renderer/exportMarkdown";
@@ -19,7 +19,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [commandsOpen, setCommandsOpen] = useState(false);
   const isNarrow = useIsNarrow();
-  const { dark, toggle } = useDarkMode();
+  const { theme, setTheme } = useTheme();
   const { settings: pageSettings, setSize: setPaperSize, setOrientation } = usePageSettings();
   const [zoom, setZoom] = useState<Zoom>(DEFAULT_ZOOM);
   // The ":::fig" block (by its 0-indexed note line) open in the figure editor.
@@ -102,8 +102,8 @@ export default function Home() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         isNarrow={isNarrow}
-        dark={dark}
-        onToggleDark={toggle}
+        theme={theme}
+        onThemeChange={setTheme}
         onExportPdf={exportPdf}
         onExportMarkdown={exportMarkdown}
         onOpenCommands={() => setCommandsOpen(true)}

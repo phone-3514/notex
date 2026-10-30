@@ -8,18 +8,18 @@ import {
   type PageSettings,
   type PaperSize,
 } from "@/config/pageSettings";
+import { DEFAULT_THEME, parseStoredTheme, themeClasses, type Theme } from "@/config/theme";
 
 const THEME_KEY = "mathnote:theme";
 
-export function useDarkMode() {
-  const [dark, setDark] = useState(false);
+export function useTheme() {
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const syncFromStorage = () => {
-      const stored = window.localStorage.getItem(THEME_KEY);
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setDark(stored ? stored === "dark" : prefersDark);
+      setTheme(parseStoredTheme(window.localStorage.getItem(THEME_KEY), prefersDark));
       setReady(true);
     };
     syncFromStorage();
@@ -27,12 +27,13 @@ export function useDarkMode() {
 
   useEffect(() => {
     if (!ready) return;
+    const { dark, terminal } = themeClasses(theme);
     document.documentElement.classList.toggle("dark", dark);
-    window.localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
-  }, [dark, ready]);
+    document.documentElement.classList.toggle("theme-terminal", terminal);
+    window.localStorage.setItem(THEME_KEY, theme);
+  }, [theme, ready]);
 
-  const toggle = useCallback(() => setDark((d) => !d), []);
-  return { dark, toggle };
+  return { theme, setTheme };
 }
 
 // Below this width, forcing a 50/50 split leaves both panels too narrow to
@@ -55,7 +56,7 @@ export function useIsNarrow() {
 
 const PAGE_SETTINGS_KEY = "mathnote:pageSettings";
 
-// Same localStorage-persisted-state shape as useDarkMode above: read once on
+// Same localStorage-persisted-state shape as useTheme above: read once on
 // mount, write on every change thereafter.
 export function usePageSettings() {
   const [settings, setSettings] = useState<PageSettings>(DEFAULT_PAGE_SETTINGS);

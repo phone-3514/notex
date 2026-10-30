@@ -348,6 +348,14 @@ body {
     --foreground: #c9d1d9;
     --pane-bg: #0f1217;
     --line: #2a303b;
+    /* Rendered-math colours (see the .katex rules below). */
+    --m-var: #7dcfff;
+    --m-num: #ff9e64;
+    --m-rel: #f7768e;
+    --m-bin: #e0af68;
+    --m-op: #bb9af7;
+    --m-punct: #8b95a7;
+    --m-sym: #73daca;
     --color-neutral-50: #ffffff;
     --color-neutral-100: #e6edf3;
     --color-neutral-200: #c9d1d9;
@@ -369,17 +377,11 @@ body {
     background: rgba(122, 162, 247, 0.35);
     color: inherit;
   }
-  /* A thick green terminal-style block cursor instead of the thin I-beam,
-     where the browser supports it (Chromium 139+). */
+  /* The normal thin text cursor, in a near-white so it stays visible against
+     the (coloured) text of the editor and every dark theme's inputs. */
   .dark textarea,
   .dark input {
-    caret-color: #9ece6a;
-  }
-  @supports (caret-shape: block) {
-    .dark textarea,
-    .dark input {
-      caret-shape: block;
-    }
+    caret-color: #f5f5f5;
   }
   .dark ::placeholder {
     color: #444c5a;
@@ -485,23 +487,71 @@ body {
     border-color: transparent;
     box-shadow: none;
   }
-  .dark .prose-mathnote h1,
-  .dark .prose-mathnote h2,
-  .dark .prose-mathnote h3 {
-    color: #7aa2f7;
-  }
   .dark .prose-mathnote h1 {
+    color: #7aa2f7;
     border-bottom-color: var(--line);
+  }
+  .dark .prose-mathnote h2 {
+    color: #73daca;
+  }
+  .dark .prose-mathnote h3 {
+    color: #bb9af7;
+  }
+  .dark .prose-mathnote h4,
+  .dark .prose-mathnote h5,
+  .dark .prose-mathnote h6 {
+    color: #8b95a7;
   }
   .dark .prose-mathnote strong {
     color: #ffffff;
   }
+  .dark .prose-mathnote li::marker {
+    color: #ff9e64;
+  }
+  /* Theorem-style blocks: one accent colour per kind. */
   .dark .prose-mathnote .note-block {
+    --blk: #e0af68;
     border-color: var(--line);
-    border-left: 3px solid #e0af68;
+    border-left: 3px solid var(--blk);
   }
   .dark .prose-mathnote .note-block-title {
-    color: #e0af68;
+    color: var(--blk);
+  }
+  .dark .prose-mathnote .note-block-theorem { --blk: #7aa2f7; }
+  .dark .prose-mathnote .note-block-definition { --blk: #9ece6a; }
+  .dark .prose-mathnote .note-block-lemma { --blk: #7dcfff; }
+  .dark .prose-mathnote .note-block-proposition { --blk: #bb9af7; }
+  .dark .prose-mathnote .note-block-corollary { --blk: #73daca; }
+  .dark .prose-mathnote .note-block-proof { --blk: #8b95a7; }
+  .dark .prose-mathnote .note-block-remark { --blk: #e0af68; }
+  .dark .prose-mathnote .note-block-example { --blk: #ff9e64; }
+  .dark .prose-mathnote .note-block-box { --blk: #f7768e; }
+
+  /* Rendered formulas, coloured by role like syntax highlighting: variables,
+     numbers/constants, relations, binary operators, big operators and
+     function names, brackets, and blackboard/calligraphic sets. KaTeX tags
+     each atom with its TeX class (mord/mrel/mbin/mop/…), so this is pure
+     CSS. Numbers are the plain leaf "mord"s (no mathnormal/font class). */
+  .dark .prose-mathnote .katex .mord:is(.mathnormal, .mathbf, .boldsymbol) {
+    color: var(--m-var);
+  }
+  .dark .prose-mathnote .katex .mord:is(.mathbb, .mathcal, .mathfrak, .mathscr) {
+    color: var(--m-sym);
+  }
+  .dark .prose-mathnote .katex .mord:not(.mathnormal, .mathbf, .boldsymbol, .mathbb, .mathcal, .mathfrak, .mathscr, .text):not(.text *):not(:has(*)) {
+    color: var(--m-num);
+  }
+  .dark .prose-mathnote .katex .mrel {
+    color: var(--m-rel);
+  }
+  .dark .prose-mathnote .katex .mbin {
+    color: var(--m-bin);
+  }
+  .dark .prose-mathnote .katex .mop {
+    color: var(--m-op);
+  }
+  .dark .prose-mathnote .katex :is(.mopen, .mclose, .mpunct) {
+    color: var(--m-punct);
   }
   .dark .prose-mathnote .math-error {
     color: #f7768e;
@@ -576,9 +626,201 @@ body {
     --hl-blue: #7aa2f7;
   }
   .dark .mn-editor-input {
-    caret-color: #7ee787;
+    caret-color: #f5f5f5;
   }
   .dark .mn-editor-input::selection {
     background: rgba(122, 162, 247, 0.35);
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Terminal theme: the plain, no-frills one — pure black with bright green
+   text (like a classic terminal profile) and a grey block cursor. It sits on
+   top of the dark theme (html has both `dark` and `theme-terminal`), reusing
+   its layout and only swapping the palette, so everything colourful in the
+   tmux theme collapses to shades of green here. Screen-only, like the rest. */
+@media screen {
+  .theme-terminal {
+    --background: #000000;
+    --foreground: #3df03d;
+    --pane-bg: #000000;
+    --line: #145a14;
+    --color-neutral-50: #d6ffd6;
+    --color-neutral-100: #8bff8b;
+    --color-neutral-200: #3df03d;
+    --color-neutral-300: #2bc22b;
+    --color-neutral-400: #1fa31f;
+    --color-neutral-500: #178317;
+    --color-neutral-600: #0f5f0f;
+    --color-neutral-700: #0d4a0d;
+    --color-neutral-800: #082d08;
+    --color-neutral-900: #041504;
+    --color-neutral-950: #000000;
+    --m-var: #9dff9d;
+    --m-num: #d6ffd6;
+    --m-rel: #3df03d;
+    --m-bin: #3df03d;
+    --m-op: #8bff8b;
+    --m-punct: #1fa31f;
+    --m-sym: #8bff8b;
+    scrollbar-color: #145a14 #000000;
+  }
+
+  .theme-terminal ::selection {
+    background: rgba(61, 240, 61, 0.3);
+  }
+  .theme-terminal textarea,
+  .theme-terminal input,
+  .theme-terminal .mn-editor-input {
+    caret-color: #f5f5f5;
+  }
+  .theme-terminal .mn-editor-input::selection {
+    background: rgba(61, 240, 61, 0.3);
+  }
+  .theme-terminal ::placeholder {
+    color: #178317;
+  }
+
+  .theme-terminal header {
+    background: #000000;
+    border-bottom-color: #145a14;
+  }
+  .theme-terminal header::before {
+    background: #3df03d;
+    color: #000000;
+  }
+  .theme-terminal .mn-status[data-status="saved"] {
+    color: #3df03d;
+  }
+  .theme-terminal .mn-status[data-status="saving"] {
+    color: #8bff8b;
+  }
+  .theme-terminal .mn-status[data-status="unsaved"] {
+    color: #ffb000;
+  }
+  .theme-terminal [aria-pressed="true"] {
+    background: #3df03d;
+    border-color: #3df03d;
+    color: #000000;
+  }
+  .theme-terminal button[data-tone] {
+    color: #3df03d;
+    border-color: #145a14;
+  }
+  .theme-terminal button:not([aria-pressed="true"]):hover {
+    border-color: #3df03d;
+  }
+
+  .theme-terminal .mn-pane-editor,
+  .theme-terminal .mn-pane-preview {
+    --pane-line: #1f9d1f;
+  }
+  .theme-terminal .mn-page {
+    color: #3df03d;
+  }
+  .theme-terminal .prose-mathnote h1,
+  .theme-terminal .prose-mathnote h2,
+  .theme-terminal .prose-mathnote h3,
+  .theme-terminal .prose-mathnote h4,
+  .theme-terminal .prose-mathnote h5,
+  .theme-terminal .prose-mathnote h6 {
+    color: #8bff8b;
+  }
+  .theme-terminal .prose-mathnote h1 {
+    border-bottom-color: #145a14;
+  }
+  .theme-terminal .prose-mathnote strong {
+    color: #d6ffd6;
+  }
+  .theme-terminal .prose-mathnote li::marker {
+    color: #8bff8b;
+  }
+  .theme-terminal .prose-mathnote .note-block,
+  .theme-terminal .prose-mathnote .note-block-theorem,
+  .theme-terminal .prose-mathnote .note-block-definition,
+  .theme-terminal .prose-mathnote .note-block-lemma,
+  .theme-terminal .prose-mathnote .note-block-proposition,
+  .theme-terminal .prose-mathnote .note-block-corollary,
+  .theme-terminal .prose-mathnote .note-block-proof,
+  .theme-terminal .prose-mathnote .note-block-remark,
+  .theme-terminal .prose-mathnote .note-block-example,
+  .theme-terminal .prose-mathnote .note-block-box {
+    --blk: #3df03d;
+  }
+  .theme-terminal .prose-mathnote .note-block-title {
+    color: #8bff8b;
+  }
+  /* Errors stay red — a monochrome error would be invisible. */
+  .theme-terminal .prose-mathnote .math-error {
+    color: #ff5f5f;
+    border-bottom-color: #ff5f5f;
+  }
+  .theme-terminal .prose-mathnote .text-highlight {
+    color: #000000;
+    background: #3df03d;
+  }
+
+  /* Figures: green ink; annotations keep a distinguishable hue. */
+  .theme-terminal .figure-canvas {
+    color: #3df03d;
+  }
+  .theme-terminal .prose-mathnote .figure-empty .figure-canvas {
+    border-color: #145a14;
+  }
+  .theme-terminal .prose-mathnote .figure-edit-btn {
+    border-color: #145a14;
+    color: #1fa31f;
+  }
+  .theme-terminal .figure-svg [stroke="#b91c1c"] {
+    stroke: #ff5f5f;
+  }
+  .theme-terminal .figure-svg [fill="#b91c1c"] {
+    fill: #ff5f5f;
+  }
+  .theme-terminal .figure-svg [stroke="#1d4ed8"] {
+    stroke: #66e0ff;
+  }
+  .theme-terminal .figure-svg [fill="#1d4ed8"] {
+    fill: #66e0ff;
+  }
+  .theme-terminal .figure-label[style*="#b91c1c"] {
+    color: #ff5f5f !important;
+  }
+  .theme-terminal .figure-label[style*="#1d4ed8"] {
+    color: #66e0ff !important;
+  }
+  .theme-terminal .fig-swatch-black {
+    background: #3df03d !important;
+  }
+  .theme-terminal .fig-swatch-red {
+    background: #ff5f5f !important;
+  }
+  .theme-terminal .fig-swatch-blue {
+    background: #66e0ff !important;
+  }
+
+  /* Editor colours: shades of green only (brightness, not hue, carries the meaning). */
+  .theme-terminal .mn-hl-layer {
+    color: #3df03d;
+    --hl-math: #9dff9d;
+    --hl-num: #d6ffd6;
+    --hl-kw: #ffffff;
+    --hl-fn: #8bff8b;
+    --hl-sym: #8bff8b;
+    --hl-op: #d6ffd6;
+    --hl-sub: #8bff8b;
+    --hl-punc: #1fa31f;
+    --hl-str: #b8ffb8;
+    --hl-delim: #1fa31f;
+    --hl-heading: #8bff8b;
+    --hl-fence: #1fa31f;
+    --hl-fence-type: #8bff8b;
+    --hl-fence-title: #3df03d;
+    --hl-list: #8bff8b;
+    --hl-dim: #178317;
+    --hl-bold: #ffffff;
+    --hl-mark-bg: rgba(61, 240, 61, 0.25);
+    --hl-red: #ff5f5f;
+    --hl-blue: #66e0ff;
   }
 }

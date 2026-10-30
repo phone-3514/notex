@@ -3,6 +3,7 @@
 import type { SaveStatus } from "@/storage/useNoteStorage";
 import type { ViewMode } from "./SplitView";
 import type { Orientation, PageSettings, PaperSize, Zoom } from "@/config/pageSettings";
+import { THEMES, type Theme } from "@/config/theme";
 
 interface TopBarProps {
   title: string;
@@ -11,8 +12,8 @@ interface TopBarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   isNarrow: boolean;
-  dark: boolean;
-  onToggleDark: () => void;
+  theme: Theme;
+  onThemeChange: (theme: Theme) => void;
   onExportPdf: () => void;
   onExportMarkdown: () => void;
   onOpenCommands: () => void;
@@ -61,8 +62,8 @@ export default function TopBar({
   viewMode,
   onViewModeChange,
   isNarrow,
-  dark,
-  onToggleDark,
+  theme,
+  onThemeChange,
   onExportPdf,
   onExportMarkdown,
   onOpenCommands,
@@ -144,15 +145,11 @@ export default function TopBar({
         Export Markdown
       </button>
 
-      <button
-        type="button"
-        onClick={onToggleDark}
-        data-tone="theme"
-        aria-label="Toggle dark mode"
-        className="shrink-0 border border-neutral-300 px-2.5 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500"
-      >
-        {dark ? "Light" : "Dark"}
-      </button>
+      <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Theme">
+        {THEMES.map((t) => (
+          <ViewButton key={t.theme} label={t.label} active={theme === t.theme} onClick={() => onThemeChange(t.theme)} />
+        ))}
+      </div>
     </header>
   );
 }
