@@ -330,7 +330,13 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <div className="flex flex-wrap gap-1" role="toolbar" aria-label="ツール">
             {TOOLS.map((t) => (
-              <button key={t.tool} type="button" className={btn(tool === t.tool)} onClick={() => setTool(t.tool)}>
+              <button
+                key={t.tool}
+                type="button"
+                aria-pressed={tool === t.tool}
+                className={btn(tool === t.tool)}
+                onClick={() => setTool(t.tool)}
+              >
                 {t.label}
               </button>
             ))}
@@ -366,7 +372,13 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
           <div className="flex items-center gap-1 text-xs" role="group" aria-label="吸着">
             <span>吸着</span>
             {SNAPS.map((s) => (
-              <button key={s.label} type="button" className={btn(step === s.step)} onClick={() => setStep(s.step)}>
+              <button
+                key={s.label}
+                type="button"
+                aria-pressed={step === s.step}
+                className={btn(step === s.step)}
+                onClick={() => setStep(s.step)}
+              >
                 {s.label}
               </button>
             ))}
@@ -427,7 +439,7 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
 
         <div className="flex justify-center overflow-auto bg-neutral-100 p-2 dark:bg-neutral-900">
           <div
-            className="relative bg-white dark:bg-[#2d2226]"
+            className="relative bg-white dark:bg-[#0f1217]"
             style={{ width: `min(100%, ${width * UNIT * EDITOR_SCALE}px)`, aspectRatio: `${width} / ${height}` }}
           >
             <div className="absolute inset-0" dangerouslySetInnerHTML={{ __html: committedHtml }} />
@@ -477,7 +489,7 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
                   }
                 }}
                 onBlur={commitText}
-                className="absolute z-10 w-40 -translate-x-1/2 -translate-y-1/2 border border-blue-500 bg-white px-1 py-0.5 text-sm text-neutral-900 dark:border-red-500 dark:bg-neutral-950 dark:text-neutral-100"
+                className="absolute z-10 w-40 -translate-x-1/2 -translate-y-1/2 border border-blue-500 bg-white px-1 py-0.5 text-sm text-neutral-900 dark:border-blue-400 dark:bg-neutral-950 dark:text-neutral-100"
                 style={{
                   left: `${(pendingText.x / width) * 100}%`,
                   top: `${((height - pendingText.y) / height) * 100}%`,
@@ -495,7 +507,7 @@ export default function FigureEditor({ initial, onSave, onCancel }: FigureEditor
           <button
             type="button"
             onClick={save}
-            className="border border-blue-600 bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 dark:border-red-600 dark:bg-red-700 dark:text-white dark:hover:bg-red-600"
+            className="border border-blue-600 bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 dark:border-green-500 dark:bg-green-500 dark:text-neutral-950 dark:hover:bg-green-400"
           >
             保存
           </button>

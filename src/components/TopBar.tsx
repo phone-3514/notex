@@ -81,7 +81,7 @@ export default function TopBar({
         className="min-w-0 flex-1 basis-full border-0 bg-transparent text-sm font-medium text-neutral-900 outline-none sm:basis-auto dark:text-neutral-100"
       />
 
-      <span className="shrink-0 text-xs text-neutral-400 dark:text-neutral-500">
+      <span data-status={status} className="mn-status shrink-0 text-xs text-neutral-400 dark:text-neutral-500">
         {STATUS_LABEL[status]}
       </span>
 
@@ -120,6 +120,7 @@ export default function TopBar({
       <button
         type="button"
         onClick={onOpenCommands}
+        data-tone="commands"
         className="shrink-0 border border-neutral-300 px-2.5 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500"
       >
         Commands
@@ -128,6 +129,7 @@ export default function TopBar({
       <button
         type="button"
         onClick={onExportPdf}
+        data-tone="export"
         className="shrink-0 border border-neutral-300 px-2.5 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500"
       >
         Export PDF
@@ -136,6 +138,7 @@ export default function TopBar({
       <button
         type="button"
         onClick={onExportMarkdown}
+        data-tone="export"
         className="shrink-0 border border-neutral-300 px-2.5 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500"
       >
         Export Markdown
@@ -144,6 +147,7 @@ export default function TopBar({
       <button
         type="button"
         onClick={onToggleDark}
+        data-tone="theme"
         aria-label="Toggle dark mode"
         className="shrink-0 border border-neutral-300 px-2.5 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500"
       >

@@ -268,141 +268,227 @@ body {
 }
 
 /* ------------------------------------------------------------------------
-   Dark theme: a muted, "code editor" look — warm charcoal surfaces with
-   soft red text and a crimson accent, monospace throughout. No glow or
-   scanlines; the aim is chic and readable rather than neon. Everything here
-   is inside @media screen on purpose: PDF export (window.print) must keep
-   the existing white-paper layout, so none of it may apply while printing.
+   Dark theme: a terminal / tmux look — near-black panes in thin coloured
+   frames with the title set into the border, coloured badges for the active
+   controls, and a syntax-highlighting-style palette (blue headings, yellow
+   block titles, green/yellow/red status, red errors) over soft grey text.
+   Everything is inside @media screen on purpose: PDF export (window.print)
+   must keep the existing white-paper layout, so none of it may apply
+   while printing.
+
+   Palette (Tokyo-Night-like): ink #c9d1d9 on #0d0f14; blue #7aa2f7,
+   green #9ece6a, yellow #e0af68, red #f7768e, cyan #7dcfff, violet #bb9af7.
 
    Most of the work is rewiring Tailwind's neutral palette under .dark —
    every existing `dark:*-neutral-*` utility then turns into a shade of the
    theme without touching the components. */
 @media screen {
   .dark {
-    --background: #1a1415;
-    --foreground: #ff9a90;
-    --color-neutral-50: #fff1ef;
-    --color-neutral-100: #ff9a90;
-    --color-neutral-200: #f58d84;
-    --color-neutral-300: #d98d86;
-    --color-neutral-400: #b9807b;
-    --color-neutral-500: #94625f;
-    --color-neutral-600: #6e4a49;
-    --color-neutral-700: #4d3739;
-    --color-neutral-800: #382a2c;
-    --color-neutral-900: #261d1f;
-    --color-neutral-950: #1a1415;
-    scrollbar-color: #5a4144 #1a1415;
+    --background: #0d0f14;
+    --foreground: #c9d1d9;
+    --pane-bg: #0f1217;
+    --line: #2a303b;
+    --color-neutral-50: #ffffff;
+    --color-neutral-100: #e6edf3;
+    --color-neutral-200: #c9d1d9;
+    --color-neutral-300: #a3acb9;
+    --color-neutral-400: #7d8590;
+    --color-neutral-500: #5f6877;
+    --color-neutral-600: #444c5a;
+    --color-neutral-700: #2a303b;
+    --color-neutral-800: #1b2029;
+    --color-neutral-900: #12151b;
+    --color-neutral-950: #0d0f14;
+    scrollbar-color: #2f3644 #0d0f14;
   }
 
   .dark body {
     font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
   .dark ::selection {
-    background: rgba(255, 107, 107, 0.38);
+    background: rgba(122, 162, 247, 0.35);
     color: inherit;
   }
+  /* A thick green terminal-style block cursor instead of the thin I-beam,
+     where the browser supports it (Chromium 139+). */
   .dark textarea,
   .dark input {
-    caret-color: #ff6b6b;
+    caret-color: #9ece6a;
   }
-  .dark ::placeholder {
-    color: #6e4a49;
-  }
-  /* A thick terminal-style block cursor instead of the thin I-beam, where the
-     browser supports it (Chromium 139+). */
   @supports (caret-shape: block) {
     .dark textarea,
     .dark input {
       caret-shape: block;
     }
   }
-
-  /* A quiet shell prompt in the top bar. */
-  .dark header::before {
-    content: "root@notex:~$";
-    color: #b9807b;
-    font-size: 12px;
-    letter-spacing: 0.02em;
-  }
-  .dark header {
-    border-bottom-color: #4d3739;
+  .dark ::placeholder {
+    color: #444c5a;
   }
   .dark button:disabled {
     opacity: 0.4;
   }
 
-  /* The preview page: a slightly raised dark "paper". */
+  /* Top bar = status line: a green "notex" badge, then status / controls. */
+  .dark header {
+    background: #0d0f14;
+    border-bottom-color: var(--line);
+  }
+  .dark header::before {
+    content: "notex";
+    background: #9ece6a;
+    color: #0d0f14;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0.1em 0.7em;
+  }
+  .dark .mn-status[data-status="saved"] {
+    color: #9ece6a;
+  }
+  .dark .mn-status[data-status="saving"] {
+    color: #e0af68;
+  }
+  .dark .mn-status[data-status="unsaved"] {
+    color: #f7768e;
+  }
+  /* Selected toggles (view mode, paper, zoom, figure tools…) are solid
+     badges, like the coloured labels in a tmux status bar. */
+  .dark [aria-pressed="true"] {
+    background: #7aa2f7;
+    border-color: #7aa2f7;
+    color: #0d0f14;
+    font-weight: 600;
+  }
+  .dark button[data-tone="commands"] {
+    color: #7dcfff;
+    border-color: #2b4a5c;
+  }
+  .dark button[data-tone="export"] {
+    color: #e0af68;
+    border-color: #5a4a2a;
+  }
+  .dark button[data-tone="theme"] {
+    color: #bb9af7;
+    border-color: #473a66;
+  }
+  .dark button:not([aria-pressed="true"]):hover {
+    border-color: #7aa2f7;
+  }
+
+  /* The two panels become framed boxes with the title set into the border. */
+  .dark .mn-split {
+    padding: 14px 10px 10px;
+    gap: 6px;
+  }
+  .dark .mn-pane {
+    position: relative;
+    border: 1px solid var(--pane-line, var(--line));
+    background: var(--pane-bg);
+  }
+  .dark .mn-pane::before {
+    content: attr(data-title);
+    position: absolute;
+    top: -0.75em;
+    left: 14px;
+    z-index: 1;
+    padding: 0 0.6em;
+    background: var(--background);
+    color: var(--pane-line);
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+  .dark .mn-pane-editor {
+    --pane-line: #7aa2f7;
+  }
+  .dark .mn-pane-preview {
+    --pane-line: #9ece6a;
+  }
+  .dark .mn-pane-hidden {
+    overflow: hidden;
+    border-width: 0;
+  }
+  .dark .mn-pane-hidden::before {
+    display: none;
+  }
+  .dark .mn-divider {
+    width: 0;
+    background: transparent;
+  }
+
+  /* The preview page sits flat inside its frame (no paper). */
+  .dark .mn-page-viewport {
+    background: transparent;
+  }
   .dark .mn-page {
-    background: #2d2226;
-    color: #f7aaa2;
-    border-color: #4d3739;
-    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+    background: transparent;
+    color: #c9d1d9;
+    border-color: transparent;
+    box-shadow: none;
   }
   .dark .prose-mathnote h1,
   .dark .prose-mathnote h2,
   .dark .prose-mathnote h3 {
-    color: #ff7b72;
+    color: #7aa2f7;
   }
   .dark .prose-mathnote h1 {
-    border-bottom-color: #5a4144;
+    border-bottom-color: var(--line);
+  }
+  .dark .prose-mathnote strong {
+    color: #ffffff;
   }
   .dark .prose-mathnote .note-block {
-    border-color: #5a4144;
-    background: rgba(255, 255, 255, 0.02);
+    border-color: var(--line);
+    border-left: 3px solid #e0af68;
   }
   .dark .prose-mathnote .note-block-title {
-    color: #ff7b72;
+    color: #e0af68;
   }
-  /* On a red-on-dark page the usual red error / red highlight would blend in,
-     so errors turn amber and ==highlight== becomes a marker-style chip. */
   .dark .prose-mathnote .math-error {
-    color: #f2c14e;
-    border-bottom-color: #f2c14e;
+    color: #f7768e;
+    border-bottom-color: #f7768e;
   }
   .dark .prose-mathnote .text-highlight {
-    color: #ffffff;
-    background: rgba(255, 107, 107, 0.3);
+    color: #ffd88a;
+    background: rgba(224, 175, 104, 0.2);
     padding: 0 0.15em;
   }
 
-  /* Figures: default ink is a pale pink, red/blue annotations keep their
-     meaning but are brightened for the dark background. */
+  /* Figures: default ink is the text grey; red/blue annotations are brightened. */
   .dark .figure-canvas {
-    color: #f3d3cf;
+    color: #c9d1d9;
   }
   .dark .prose-mathnote .figure-empty .figure-canvas {
-    border-color: #5a4144;
+    border-color: var(--line);
   }
   .dark .prose-mathnote .figure-edit-btn {
-    border-color: #5a4144;
-    color: #b9807b;
+    border-color: var(--line);
+    color: #7d8590;
   }
   .dark .figure-svg [stroke="#b91c1c"] {
-    stroke: #ff6b6b;
+    stroke: #f7768e;
   }
   .dark .figure-svg [fill="#b91c1c"] {
-    fill: #ff6b6b;
+    fill: #f7768e;
   }
   .dark .figure-svg [stroke="#1d4ed8"] {
-    stroke: #6cb2ff;
+    stroke: #7aa2f7;
   }
   .dark .figure-svg [fill="#1d4ed8"] {
-    fill: #6cb2ff;
+    fill: #7aa2f7;
   }
   .dark .figure-label[style*="#b91c1c"] {
-    color: #ff6b6b !important;
+    color: #f7768e !important;
   }
   .dark .figure-label[style*="#1d4ed8"] {
-    color: #6cb2ff !important;
+    color: #7aa2f7 !important;
   }
   .dark .fig-swatch-black {
-    background: #f3d3cf !important;
+    background: #c9d1d9 !important;
   }
   .dark .fig-swatch-red {
-    background: #ff6b6b !important;
+    background: #f7768e !important;
   }
   .dark .fig-swatch-blue {
-    background: #6cb2ff !important;
+    background: #7aa2f7 !important;
   }
 }

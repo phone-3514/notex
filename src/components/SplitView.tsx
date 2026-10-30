@@ -73,12 +73,21 @@ export default function SplitView({
   const previewWidth = !showPreview ? "0%" : showDivider ? `${(1 - ratio) * 100}%` : "100%";
 
   return (
-    <div ref={containerRef} className="flex min-h-0 flex-1">
+    <div ref={containerRef} className="mn-split flex min-h-0 flex-1">
+      {/* Each panel sits in a ".mn-pane" frame: invisible in the light theme,
+          a titled, coloured box in the dark one (see globals.css). The frame
+          is deliberately not the scroll container, so its title stays put. */}
       <div
-        className="h-full min-w-0 overflow-y-auto overflow-x-hidden border-neutral-200 dark:border-neutral-800"
-        style={{ width: editorWidth, borderRightWidth: showDivider ? 0 : undefined }}
+        className={`mn-pane mn-pane-editor h-full min-w-0 ${showEditor ? "" : "mn-pane-hidden"}`}
+        data-title="editor"
+        style={{ width: editorWidth }}
       >
-        <Editor value={content} onChange={onChange} onCursorLineChange={setCursorLine} />
+        <div
+          className="h-full w-full min-w-0 overflow-y-auto overflow-x-hidden border-neutral-200 dark:border-neutral-800"
+          style={{ borderRightWidth: showDivider ? 0 : undefined }}
+        >
+          <Editor value={content} onChange={onChange} onCursorLineChange={setCursorLine} />
+        </div>
       </div>
 
       {showDivider && (
@@ -87,22 +96,24 @@ export default function SplitView({
           aria-orientation="vertical"
           aria-label="Resize editor and preview panels"
           onPointerDown={startDragging}
-          className="w-1 shrink-0 cursor-col-resize bg-neutral-200 transition-colors hover:bg-neutral-400 dark:bg-neutral-800 dark:hover:bg-neutral-600"
+          className="mn-divider w-1 shrink-0 cursor-col-resize bg-neutral-200 transition-colors hover:bg-neutral-400 dark:bg-neutral-800 dark:hover:bg-neutral-600"
         />
       )}
 
       <div
-        id="print-area"
-        className="h-full min-w-0 overflow-y-auto overflow-x-hidden"
+        className={`mn-pane mn-pane-preview h-full min-w-0 ${showPreview ? "" : "mn-pane-hidden"}`}
+        data-title="preview"
         style={{ width: previewWidth }}
       >
-        <Preview
-          content={content}
-          cursorLine={cursorLine}
-          pageSettings={pageSettings}
-          zoom={zoom}
-          onEditFigure={onEditFigure}
-        />
+        <div id="print-area" className="h-full w-full min-w-0 overflow-y-auto overflow-x-hidden">
+          <Preview
+            content={content}
+            cursorLine={cursorLine}
+            pageSettings={pageSettings}
+            zoom={zoom}
+            onEditFigure={onEditFigure}
+          />
+        </div>
       </div>
     </div>
   );
