@@ -177,6 +177,14 @@ body {
 .mn-editor-input::selection {
   background: rgba(59, 130, 246, 0.3);
 }
+/* Top bar text, a notch smaller than Tailwind's text-xs / text-sm. */
+header button,
+header .mn-status {
+  font-size: 11px;
+}
+header input {
+  font-size: 12px;
+}
 /* Syntax colours — light theme. */
 .mn-hl-layer {
   --hl-math: #0a6a8a;
@@ -634,14 +642,15 @@ body {
 }
 
 /* ------------------------------------------------------------------------
-   Terminal theme: plain and rugged — pure black, muted (not fluorescent)
-   green text, no glow, no filled badges. It sits on top of the dark theme
-   (html has both `dark` and `theme-terminal`), reusing its layout and only
-   swapping the palette: everything colourful in the tmux theme collapses to
-   shades of one soft green, with outlines instead of solid highlights.
+   Terminal theme: plain and rugged. Pure black; no frames — the editor and
+   preview are separated by a single thin vertical rule; the top bar is bare
+   dim text (the current choice just a shade brighter). The editor is small,
+   uniform green "terminal" text with no syntax colours; the preview is white
+   text on black. It sits on top of the dark theme (html has both `dark` and
+   `theme-terminal`), reusing its layout and overriding the palette.
    Screen-only, like the rest.
 
-   Palette: text #3fb950, soft emphasis #7bc77f, dim #2a7a36, rules #1b4d20;
+   Palette: editor green #3fb950, rules #1b4d20, preview text #e6e6e6,
    errors #e5534b, unsaved #d29922. */
 @media screen {
   .theme-terminal {
@@ -649,25 +658,26 @@ body {
     --foreground: #3fb950;
     --pane-bg: #000000;
     --line: #1b4d20;
-    --color-neutral-50: #b6e0b9;
-    --color-neutral-100: #7bc77f;
-    --color-neutral-200: #3fb950;
-    --color-neutral-300: #35a047;
-    --color-neutral-400: #2a7a36;
-    --color-neutral-500: #236629;
-    --color-neutral-600: #1b4d20;
-    --color-neutral-700: #153a19;
-    --color-neutral-800: #0e2611;
-    --color-neutral-900: #08130a;
+    --color-neutral-50: #f2f2f2;
+    --color-neutral-100: #d8d8d8;
+    --color-neutral-200: #bdbdbd;
+    --color-neutral-300: #9a9a9a;
+    --color-neutral-400: #777777;
+    --color-neutral-500: #5c5c5c;
+    --color-neutral-600: #444444;
+    --color-neutral-700: #2e2e2e;
+    --color-neutral-800: #1c1c1c;
+    --color-neutral-900: #0c0c0c;
     --color-neutral-950: #000000;
-    --m-var: #3fb950;
-    --m-num: #3fb950;
-    --m-rel: #3fb950;
-    --m-bin: #3fb950;
-    --m-op: #3fb950;
-    --m-punct: #2a7a36;
-    --m-sym: #3fb950;
-    scrollbar-color: #1b4d20 #000000;
+    /* Rendered math: same white as the surrounding preview text. */
+    --m-var: #e6e6e6;
+    --m-num: #e6e6e6;
+    --m-rel: #e6e6e6;
+    --m-bin: #e6e6e6;
+    --m-op: #e6e6e6;
+    --m-punct: #bdbdbd;
+    --m-sym: #e6e6e6;
+    scrollbar-color: #2e2e2e #000000;
   }
 
   .theme-terminal ::selection {
@@ -685,69 +695,98 @@ body {
     color: #236629;
   }
 
-  /* Top bar: plain text prompt instead of a solid badge. */
+  /* Top bar: bare text, dim; no borders or fills. */
   .theme-terminal header {
     background: #000000;
-    border-bottom-color: #1b4d20;
+    border-bottom-color: #1b1b1b;
   }
   .theme-terminal header::before {
     content: "notex>";
     background: transparent;
-    color: #3fb950;
+    color: #2a7a36;
     padding: 0;
     font-weight: 400;
   }
+  .theme-terminal header input {
+    color: #9a9a9a;
+  }
   .theme-terminal .mn-status[data-status="saved"] {
-    color: #2a7a36;
+    color: #3a3a3a;
   }
   .theme-terminal .mn-status[data-status="saving"] {
-    color: #7bc77f;
+    color: #777777;
   }
   .theme-terminal .mn-status[data-status="unsaved"] {
-    color: #d29922;
+    color: #b8860b;
   }
-  /* Selected toggles: outlined and brighter, not a solid block. */
-  .theme-terminal [aria-pressed="true"] {
-    background: #0e2611;
-    border-color: #3fb950;
-    color: #7bc77f;
+  .theme-terminal header button,
+  .theme-terminal header button[data-tone] {
+    background: transparent;
+    border-color: transparent;
+    color: #555555;
+  }
+  .theme-terminal header button:not([aria-pressed="true"]):hover {
+    background: transparent;
+    border-color: transparent;
+    color: #9a9a9a;
+  }
+  .theme-terminal header [aria-pressed="true"] {
+    background: transparent;
+    border-color: transparent;
+    color: #d8d8d8;
     font-weight: 400;
+    text-decoration: underline;
+    text-underline-offset: 5px;
   }
-  .theme-terminal button[data-tone] {
-    color: #3fb950;
-    border-color: #1b4d20;
+  /* Elsewhere (e.g. the figure editor's tool buttons) a selected toggle is just outlined. */
+  .theme-terminal [aria-pressed="true"] {
+    background: #1c1c1c;
+    border-color: #777777;
+    color: #f2f2f2;
+    font-weight: 400;
   }
   .theme-terminal button:not([aria-pressed="true"]):hover {
-    border-color: #3fb950;
+    border-color: #777777;
   }
 
-  .theme-terminal .mn-pane-editor,
-  .theme-terminal .mn-pane-preview {
-    --pane-line: #1b4d20;
+  /* No frames: just a thin vertical rule (with a wider invisible grab area). */
+  .theme-terminal .mn-split {
+    padding: 0;
+    gap: 0;
+  }
+  .theme-terminal .mn-pane {
+    border: 0;
+    background: #000000;
   }
   .theme-terminal .mn-pane::before {
-    color: #2a7a36;
-    font-weight: 400;
+    display: none;
   }
+  .theme-terminal .mn-divider {
+    width: 5px;
+    background: linear-gradient(to right, transparent 2px, #2a7a36 2px, #2a7a36 3px, transparent 3px);
+  }
+  .theme-terminal .mn-divider:hover {
+    background: linear-gradient(to right, transparent 2px, #3fb950 2px, #3fb950 3px, transparent 3px);
+  }
+
+  /* Preview: white text on black. */
   .theme-terminal .mn-page {
-    color: #3fb950;
+    color: #e6e6e6;
   }
   .theme-terminal .prose-mathnote h1,
   .theme-terminal .prose-mathnote h2,
   .theme-terminal .prose-mathnote h3,
   .theme-terminal .prose-mathnote h4,
   .theme-terminal .prose-mathnote h5,
-  .theme-terminal .prose-mathnote h6 {
-    color: #7bc77f;
+  .theme-terminal .prose-mathnote h6,
+  .theme-terminal .prose-mathnote strong {
+    color: #ffffff;
   }
   .theme-terminal .prose-mathnote h1 {
-    border-bottom-color: #1b4d20;
-  }
-  .theme-terminal .prose-mathnote strong {
-    color: #7bc77f;
+    border-bottom-color: #333333;
   }
   .theme-terminal .prose-mathnote li::marker {
-    color: #2a7a36;
+    color: #9a9a9a;
   }
   .theme-terminal .prose-mathnote .note-block,
   .theme-terminal .prose-mathnote .note-block-theorem,
@@ -759,10 +798,11 @@ body {
   .theme-terminal .prose-mathnote .note-block-remark,
   .theme-terminal .prose-mathnote .note-block-example,
   .theme-terminal .prose-mathnote .note-block-box {
-    --blk: #2a7a36;
+    --blk: #666666;
+    border-color: #333333;
   }
   .theme-terminal .prose-mathnote .note-block-title {
-    color: #7bc77f;
+    color: #ffffff;
   }
   /* Errors stay red — a monochrome error would be invisible. */
   .theme-terminal .prose-mathnote .math-error {
@@ -770,23 +810,23 @@ body {
     border-bottom-color: #e5534b;
   }
   .theme-terminal .prose-mathnote .text-highlight {
-    color: #7bc77f;
+    color: #ffffff;
     background: transparent;
     padding: 0;
     text-decoration: underline;
     text-underline-offset: 3px;
   }
 
-  /* Figures: green ink; annotations keep a distinguishable (muted) hue. */
+  /* Figures: white ink; annotations keep a distinguishable (muted) hue. */
   .theme-terminal .figure-canvas {
-    color: #3fb950;
+    color: #e6e6e6;
   }
   .theme-terminal .prose-mathnote .figure-empty .figure-canvas {
-    border-color: #1b4d20;
+    border-color: #333333;
   }
   .theme-terminal .prose-mathnote .figure-edit-btn {
-    border-color: #1b4d20;
-    color: #2a7a36;
+    border-color: #333333;
+    color: #777777;
   }
   .theme-terminal .figure-svg [stroke="#b91c1c"] {
     stroke: #e5534b;
@@ -807,7 +847,7 @@ body {
     color: #58a6ff !important;
   }
   .theme-terminal .fig-swatch-black {
-    background: #3fb950 !important;
+    background: #e6e6e6 !important;
   }
   .theme-terminal .fig-swatch-red {
     background: #e5534b !important;
@@ -816,28 +856,35 @@ body {
     background: #58a6ff !important;
   }
 
-  /* Editor: one green, with only a soft lighter shade and a dim shade. */
+  /* Editor: smaller, and one uniform terminal green for everything — no
+     syntax colours (every highlight class resolves to the base colour). */
+  .theme-terminal .mn-editor-text {
+    font-size: 13px;
+  }
   .theme-terminal .mn-hl-layer {
     color: #3fb950;
     --hl-math: #3fb950;
     --hl-num: #3fb950;
-    --hl-kw: #7bc77f;
-    --hl-fn: #7bc77f;
-    --hl-sym: #7bc77f;
+    --hl-kw: #3fb950;
+    --hl-fn: #3fb950;
+    --hl-sym: #3fb950;
     --hl-op: #3fb950;
     --hl-sub: #3fb950;
-    --hl-punc: #2a7a36;
-    --hl-str: #7bc77f;
-    --hl-delim: #2a7a36;
-    --hl-heading: #7bc77f;
-    --hl-fence: #2a7a36;
-    --hl-fence-type: #7bc77f;
+    --hl-punc: #3fb950;
+    --hl-str: #3fb950;
+    --hl-delim: #3fb950;
+    --hl-heading: #3fb950;
+    --hl-fence: #3fb950;
+    --hl-fence-type: #3fb950;
     --hl-fence-title: #3fb950;
-    --hl-list: #2a7a36;
-    --hl-dim: #236629;
-    --hl-bold: #7bc77f;
-    --hl-mark-bg: rgba(63, 185, 80, 0.2);
-    --hl-red: #e5534b;
-    --hl-blue: #58a6ff;
+    --hl-list: #3fb950;
+    --hl-dim: #3fb950;
+    --hl-bold: #3fb950;
+    --hl-mark-bg: transparent;
+    --hl-red: #3fb950;
+    --hl-blue: #3fb950;
+  }
+  .theme-terminal .hl-snippet {
+    text-decoration: none;
   }
 }

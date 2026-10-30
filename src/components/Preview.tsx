@@ -63,7 +63,7 @@ export default function Preview({ content, cursorLine, pageSettings, zoom, onEdi
           {/* The preview HTML is a raw string, so the figure edit buttons it
               contains are handled by one delegated click listener. */}
           <div
-            className="prose-mathnote p-4 text-[17px] leading-[1.75]"
+            className="prose-mathnote p-4 text-[15px] leading-[1.75]"
             onClick={(e) => {
               const button = (e.target as HTMLElement).closest<HTMLElement>("[data-fig-line]");
               if (!button || !onEditFigure) return;

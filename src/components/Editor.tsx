@@ -235,7 +235,7 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
       <pre
         ref={highlightRef}
         aria-hidden="true"
-        className="mn-editor-text mn-hl-layer pointer-events-none absolute inset-0 m-0 overflow-hidden p-4 font-mono text-[17px] leading-[1.7] text-neutral-900"
+        className="mn-editor-text mn-hl-layer pointer-events-none absolute inset-0 m-0 overflow-hidden p-4 font-mono text-[15px] leading-[1.7] text-neutral-900"
         dangerouslySetInnerHTML={{ __html: highlightedHtml }}
       />
       <textarea
@@ -251,7 +251,7 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
         autoCapitalize="off"
         autoCorrect="off"
         placeholder="Start typing Markdown + math..."
-        className="mn-editor-text mn-editor-input relative h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-[17px] leading-[1.7] text-transparent caret-neutral-900 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+        className="mn-editor-text mn-editor-input relative h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-[15px] leading-[1.7] text-transparent caret-neutral-900 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
       />
       {menu && (
         <AutocompleteMenu
