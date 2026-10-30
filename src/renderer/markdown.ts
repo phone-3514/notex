@@ -427,6 +427,17 @@ export const UNORDERED_RE = /^[-*+]\s+(.*)$/;
 export const ORDERED_RE = /^\d+\.\s+(.*)$/;
 export const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 
+// True for a line that opens one of the multi-line display blocks
+// ("= align", "= f(x)=cases", "= matrix"). Paragraph scanning uses it to stop
+// *before* such a line, so a block directly after a text line (no blank line
+// between) is still read as a block, not as a one-line equation.
+export function isMultilineBlockOpen(line: string): boolean {
+  const display = DISPLAY_PREFIX_RE.exec(line);
+  if (!display) return false;
+  const expr = display[1];
+  return CASES_OPEN_RE.test(expr) || ALIGN_OPEN_RE.test(expr) || MATRIX_OPEN_RE.test(expr);
+}
+
 // Rewrites the body of a ":::math" region into ordinary note lines. Each plain
 // line becomes an inline "@...@" math span (so consecutive lines read as one
 // paragraph, like "@...@" in prose); a line starting with "= " stays a
@@ -619,6 +630,7 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
     // starting with exactly "= " (the display-math boundary) becomes its own
     // equation instead of plain paragraph text; everything else is prose,
     // with "@...@" (or legacy "$...$") handled inline by renderInline.
+    const paragraphStart = i;
     let paraLines: string[] = [];
     let paraStartLine = -1;
     const flushParagraph = () => {
@@ -633,7 +645,8 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
       lines[i].trim() !== "" &&
       !HEADING_RE.test(lines[i]) &&
       !UNORDERED_RE.test(lines[i]) &&
-      !ORDERED_RE.test(lines[i])
+      !ORDERED_RE.test(lines[i]) &&
+      !(i > paragraphStart && isMultilineBlockOpen(lines[i]))
     ) {
       const currentLine = lines[i];
       const display = DISPLAY_PREFIX_RE.exec(currentLine);

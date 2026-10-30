@@ -460,6 +460,21 @@ describe("renderMarkdownToHtml", () => {
     });
   });
 
+  describe("a multi-line display block directly after a text line (no blank line between)", () => {
+    it("is still read as a block, not a one-line equation", () => {
+      const html = renderMarkdownToHtml("前の文\n= align\nf(x)\n= x^2\nend");
+      expect(html).toContain("\\begin{aligned}");
+      expect(html).not.toContain("math-error");
+      expect(html).toContain("前の文");
+    });
+
+    it("works inside :::math too, after plain formula lines", () => {
+      const html = renderMarkdownToHtml(":::math\nx<y\n= f(x)=cases\n1, x>0\n0, x<=0\nend\n:::");
+      expect(html).toContain("\\begin{cases}");
+      expect(html).not.toContain("math-error");
+    });
+  });
+
   describe("inline math containing Japanese prose wraps like ordinary text", () => {
     it("pulls non-ASCII runs out of the formula as plain HTML text", () => {
       const html = renderMarkdownToHtml("@計算量が O(n^2) のバブルソート@");

@@ -81,6 +81,12 @@ describe("noteToMarkdown", () => {
     expect(md).toContain("後");
   });
 
+  it("exports a block directly after a text line as one aligned equation", () => {
+    const md = noteToMarkdown("前の文\n= align\nf(x)\n= x^2\nend");
+    expect(md).toContain("\\begin{aligned}");
+    expect(md).toContain("前の文");
+  });
+
   it("flags an invalid inline expression without crashing or emitting fake LaTeX", () => {
     const md = noteToMarkdown("Bad @1/@ here.");
     expect(md).toContain("math error");

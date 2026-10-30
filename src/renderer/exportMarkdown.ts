@@ -35,6 +35,7 @@ import {
   buildMatrixLatex,
   collectBlockRows,
   mathModeBodyLines,
+  isMultilineBlockOpen,
 } from "./markdown";
 import { FIGURE_OPEN_RE, FIGURE_CLOSE } from "@/figure/figureText";
 import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE, MATH_MODE_OPEN_RE } from "./noteBlocks";
@@ -287,6 +288,7 @@ function exportMarkdownBlocks(chunk: string): string {
 
     // Paragraph: consecutive non-blank, non-heading, non-list lines. A line
     // starting with exactly "= " becomes its own "$$...$$" equation.
+    const paragraphStart = i;
     const paraLines: string[] = [];
     const flushParagraph = () => {
       if (paraLines.length > 0) {
@@ -300,7 +302,8 @@ function exportMarkdownBlocks(chunk: string): string {
       lines[i].trim() !== "" &&
       !HEADING_RE.test(lines[i]) &&
       !UNORDERED_RE.test(lines[i]) &&
-      !ORDERED_RE.test(lines[i])
+      !ORDERED_RE.test(lines[i]) &&
+      !(i > paragraphStart && isMultilineBlockOpen(lines[i]))
     ) {
       const currentLine = lines[i];
       const display = DISPLAY_PREFIX_RE.exec(currentLine);

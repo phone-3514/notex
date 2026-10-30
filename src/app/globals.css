@@ -163,6 +163,66 @@ body {
   color: #f87171;
 }
 
+/* Editor: the textarea's own text is transparent; the visible text is the
+   syntax-coloured <pre> layer behind it (see Editor.tsx / editor/highlight.ts).
+   Both must lay text out identically, so they share one typography class. */
+.mn-editor-text {
+  font-variant-ligatures: none;
+  letter-spacing: normal;
+  tab-size: 8;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.mn-editor-input::selection {
+  background: rgba(59, 130, 246, 0.3);
+}
+/* Syntax colours — light theme. */
+.mn-hl-layer {
+  --hl-math: #0a6a8a;
+  --hl-num: #b45309;
+  --hl-kw: #7e22ce;
+  --hl-fn: #1d4ed8;
+  --hl-sym: #0f766e;
+  --hl-op: #be123c;
+  --hl-sub: #a16207;
+  --hl-punc: #64748b;
+  --hl-str: #a16207;
+  --hl-delim: #9333ea;
+  --hl-heading: #1d4ed8;
+  --hl-fence: #a16207;
+  --hl-fence-type: #c2410c;
+  --hl-fence-title: #171717;
+  --hl-list: #c2410c;
+  --hl-dim: #94a3b8;
+  --hl-bold: #000000;
+  --hl-mark-bg: rgba(234, 179, 8, 0.25);
+  --hl-red: #b91c1c;
+  --hl-blue: #1d4ed8;
+}
+.hl-math { color: var(--hl-math); }
+.hl-num { color: var(--hl-num); }
+.hl-kw { color: var(--hl-kw); }
+.hl-fn { color: var(--hl-fn); }
+.hl-sym { color: var(--hl-sym); }
+.hl-op { color: var(--hl-op); }
+.hl-sub { color: var(--hl-sub); }
+.hl-punc { color: var(--hl-punc); }
+.hl-str { color: var(--hl-str); }
+.hl-delim { color: var(--hl-delim); }
+.hl-heading,
+.hl-heading-mark { color: var(--hl-heading); }
+.hl-fence { color: var(--hl-fence); }
+.hl-fence-type { color: var(--hl-fence-type); }
+.hl-fence-title { color: var(--hl-fence-title); }
+.hl-list { color: var(--hl-list); }
+.hl-dim { color: var(--hl-dim); }
+.hl-bold { color: var(--hl-bold); }
+.hl-mark { background: var(--hl-mark-bg); }
+.hl-red { color: var(--hl-red); }
+.hl-blue { color: var(--hl-blue); }
+.hl-snippet { color: var(--hl-sym); text-decoration: underline dotted; }
+
 /* Invisible, non-positioned raw-TeX-source companion to each rendered
    formula (see renderKatex in renderer/markdown.ts) — irrelevant on screen,
    so hidden outright here; only @media print below turns it into real
@@ -490,5 +550,35 @@ body {
   }
   .dark .fig-swatch-blue {
     background: #7aa2f7 !important;
+  }
+  /* Editor text: terminal green, with syntax colours on top. */
+  .dark .mn-hl-layer {
+    color: #7ee787;
+    --hl-math: #7dcfff;
+    --hl-num: #ff9e64;
+    --hl-kw: #bb9af7;
+    --hl-fn: #7aa2f7;
+    --hl-sym: #73daca;
+    --hl-op: #f7768e;
+    --hl-sub: #e0af68;
+    --hl-punc: #8b95a7;
+    --hl-str: #e0af68;
+    --hl-delim: #bb9af7;
+    --hl-heading: #7aa2f7;
+    --hl-fence: #e0af68;
+    --hl-fence-type: #ff9e64;
+    --hl-fence-title: #e6edf3;
+    --hl-list: #ff9e64;
+    --hl-dim: #5f6877;
+    --hl-bold: #ffffff;
+    --hl-mark-bg: rgba(224, 175, 104, 0.25);
+    --hl-red: #f7768e;
+    --hl-blue: #7aa2f7;
+  }
+  .dark .mn-editor-input {
+    caret-color: #7ee787;
+  }
+  .dark .mn-editor-input::selection {
+    background: rgba(122, 162, 247, 0.35);
   }
 }

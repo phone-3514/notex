@@ -2,6 +2,8 @@
 
 import {
   useCallback,
+  useEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -14,6 +16,7 @@ import { wrapBold, insertHeading, type TextState } from "@/editor/shortcuts";
 import { isComposingInput } from "@/editor/composition";
 import { getCaretCoordinates } from "@/editor/caretCoordinates";
 import { lineNumberAt } from "@/editor/cursorLine";
+import { highlightToHtml } from "@/editor/highlight";
 import AutocompleteMenu from "./AutocompleteMenu";
 
 interface EditorProps {
@@ -42,8 +45,37 @@ const NOTE_TRIGGER_RE = /;[a-zA-Z]*$/;
 
 export default function Editor({ value, onChange, onCursorLineChange }: EditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLPreElement>(null);
   const composingRef = useRef(false);
   const [menu, setMenu] = useState<MenuState | null>(null);
+
+  // The colour layer: the same text, drawn in syntax colours underneath the
+  // (transparent-text) textarea. A trailing zero-width space keeps a final
+  // empty line from collapsing, so both layers always have the same height.
+  const highlightedHtml = useMemo(() => highlightToHtml(value) + "\u200b", [value]);
+
+  // Keeps the colour layer pixel-aligned with the textarea: same scroll
+  // offset, and the same wrapping width (the textarea loses width to its
+  // scrollbar, so the layer gets matching extra right padding).
+  const syncHighlightLayer = useCallback(() => {
+    const ta = textareaRef.current;
+    const layer = highlightRef.current;
+    if (!ta || !layer) return;
+    layer.style.paddingRight = `${16 + (ta.offsetWidth - ta.clientWidth)}px`;
+    layer.scrollTop = ta.scrollTop;
+  }, []);
+
+  useEffect(() => {
+    syncHighlightLayer();
+  }, [value, syncHighlightLayer]);
+
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const observer = new ResizeObserver(syncHighlightLayer);
+    observer.observe(ta);
+    return () => observer.disconnect();
+  }, [syncHighlightLayer]);
 
   // Writes the result of a text transform back into both React state and the
   // live DOM node, so the caret lands in the right place without waiting for
@@ -200,11 +232,18 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
 
   return (
     <div className="relative h-full">
+      <pre
+        ref={highlightRef}
+        aria-hidden="true"
+        className="mn-editor-text mn-hl-layer pointer-events-none absolute inset-0 m-0 overflow-hidden p-4 font-mono text-[17px] leading-[1.7] text-neutral-900"
+        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+      />
       <textarea
         ref={textareaRef}
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onScroll={syncHighlightLayer}
         onCompositionStart={handleCompositionStart}
         onCompositionEnd={handleCompositionEnd}
         onClick={() => setMenu(null)}
@@ -212,7 +251,7 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
         autoCapitalize="off"
         autoCorrect="off"
         placeholder="Start typing Markdown + math..."
-        className="h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-[17px] leading-[1.7] text-neutral-900 outline-none placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-600"
+        className="mn-editor-text mn-editor-input relative h-full w-full resize-none border-0 bg-transparent p-4 font-mono text-[17px] leading-[1.7] text-transparent caret-neutral-900 outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
       />
       {menu && (
         <AutocompleteMenu
