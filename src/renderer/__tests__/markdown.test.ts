@@ -460,6 +460,41 @@ describe("renderMarkdownToHtml", () => {
     });
   });
 
+  describe("inline math containing Japanese prose wraps like ordinary text", () => {
+    it("pulls non-ASCII runs out of the formula as plain HTML text", () => {
+      const html = renderMarkdownToHtml("@計算量が O(n^2) のバブルソート@");
+      expect(html).not.toContain("math-error");
+      expect(html).not.toContain("\\text{計算量");
+      expect(html).toContain("計算量が ");
+      expect(html).toContain(" のバブルソート");
+      expect(html.match(/class="katex"/g)).toHaveLength(1);
+    });
+
+    it("keeps an explicit text(...) inside its formula, Japanese or not", () => {
+      const html = renderMarkdownToHtml("@x text(ただし) y@");
+      expect(html).toContain("\\text{ただし}");
+    });
+
+    it("tolerates a formula split around prose by unbalanced brackets", () => {
+      const html = renderMarkdownToHtml("@f(注意)@");
+      expect(html).not.toContain("math-error");
+      expect(html.match(/class="katex"/g)).toHaveLength(2);
+    });
+
+    it("applies to ':::math' lines, so a long sentence wraps", () => {
+      const html = renderMarkdownToHtml(":::math\n高速なアルゴリズム，計算量が O(n log n) のクイックソート\n:::");
+      expect(html).not.toContain("math-error");
+      expect(html).not.toContain("\\text{高速");
+      expect(html).toContain("高速なアルゴリズム，計算量が ");
+      expect(html.match(/class="katex"/g)).toHaveLength(1);
+    });
+
+    it("leaves display math (which scrolls instead of wrapping) as a single KaTeX box", () => {
+      const html = renderMarkdownToHtml("= 注意 x");
+      expect(html.match(/class="katex-display"/g)).toHaveLength(1);
+    });
+  });
+
   describe(":::fig (drawing blocks)", () => {
     it("renders the shapes as an SVG figure with an edit button anchored to its line", () => {
       const html = renderMarkdownToHtml("前の文章\n\n:::fig 8x5\narrow 1,1 4,1\ntext 2,2 \"x_0\"\n:::\n\n後ろ");
@@ -495,6 +530,15 @@ describe("renderMarkdownToHtml", () => {
       expect(html.match(/<p /g)).toHaveLength(1);
       expect(html.match(/class="katex"/g)).toHaveLength(2);
       expect(html).toContain("<br />");
+    });
+
+    it("keeps '# heading' lines as headings instead of turning them into formulas", () => {
+      const html = renderMarkdownToHtml(":::math\n# 見出し\nx+1\n## 小見出し\n:::");
+      expect(html).toContain("<h1");
+      expect(html).toContain("見出し</h1>");
+      expect(html).toContain("<h2");
+      expect(html).not.toContain("math-error");
+      expect(html.match(/class="katex"/g)).toHaveLength(1);
     });
 
     it("keeps '= ' lines as display equations next to the inline ones", () => {

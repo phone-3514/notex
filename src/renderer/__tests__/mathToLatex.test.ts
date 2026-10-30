@@ -525,6 +525,20 @@ describe("shorthandToLatex — vectors", () => {
       expect(shorthandToLatex("( = )")).toBe("(=)");
     });
 
+    it("a bare '<' with no angle group to close is a relation with a missing side", () => {
+      expect(shorthandToLatex("(< oo)")).toBe("(<\\ \\infty)");
+      expect(shorthandToLatex("< x")).toBe("<\\ x");
+      expect(shorthandToLatex("x <")).toBe("x\\ <");
+      expect(shorthandToLatex("(x <)")).toBe("(x\\ <)");
+      expect(shorthandToLatex("(> 0)")).toBe("(>\\ 0)");
+      expect(shorthandToLatex("(< oo, > 0)")).toBe("(<\\ \\infty,>\\ 0)");
+    });
+
+    it("a real angle group still wins over the relation reading", () => {
+      expect(shorthandToLatex("<v>")).toBe("\\langle v\\rangle");
+      expect(shorthandToLatex("<a,b>")).toBe("\\langle a,b\\rangle");
+    });
+
     it("a ')' with no '(' is kept as a literal ')'", () => {
       expect(shorthandToLatex("x)")).toBe("x)");
       expect(shorthandToLatex("x))")).toBe("x))");

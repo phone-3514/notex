@@ -268,154 +268,141 @@ body {
 }
 
 /* ------------------------------------------------------------------------
-   "Hacker terminal" theme — the dark mode is a black screen with red,
-   glowing monospace text. Everything here is inside @media screen on
-   purpose: PDF export (window.print) must keep the existing white-paper
-   layout, so none of it may apply while printing.
+   Dark theme: a muted, "code editor" look — warm charcoal surfaces with
+   soft red text and a crimson accent, monospace throughout. No glow or
+   scanlines; the aim is chic and readable rather than neon. Everything here
+   is inside @media screen on purpose: PDF export (window.print) must keep
+   the existing white-paper layout, so none of it may apply while printing.
 
    Most of the work is rewiring Tailwind's neutral palette under .dark —
-   every existing `dark:*-neutral-*` utility then turns into a shade of red
-   without touching the components. */
+   every existing `dark:*-neutral-*` utility then turns into a shade of the
+   theme without touching the components. */
 @media screen {
   .dark {
-    --background: #000000;
-    --foreground: #ff3b3b;
-    --color-neutral-50: #ffd9d9;
-    --color-neutral-100: #ff3b3b;
-    --color-neutral-200: #ff4f4f;
-    --color-neutral-300: #e03030;
-    --color-neutral-400: #d42c2c;
-    --color-neutral-500: #b52424;
-    --color-neutral-600: #8e1b1b;
-    --color-neutral-700: #4a0e0e;
-    --color-neutral-800: #2c0707;
-    --color-neutral-900: #0c0000;
-    --color-neutral-950: #000000;
-    scrollbar-color: #7a1212 #000000;
+    --background: #1a1415;
+    --foreground: #ff9a90;
+    --color-neutral-50: #fff1ef;
+    --color-neutral-100: #ff9a90;
+    --color-neutral-200: #f58d84;
+    --color-neutral-300: #d98d86;
+    --color-neutral-400: #b9807b;
+    --color-neutral-500: #94625f;
+    --color-neutral-600: #6e4a49;
+    --color-neutral-700: #4d3739;
+    --color-neutral-800: #382a2c;
+    --color-neutral-900: #261d1f;
+    --color-neutral-950: #1a1415;
+    scrollbar-color: #5a4144 #1a1415;
   }
 
   .dark body {
     font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    text-shadow: 0 0 5px rgba(255, 40, 40, 0.5);
   }
   .dark ::selection {
-    background: #ff2a2a;
-    color: #000000;
-    text-shadow: none;
+    background: rgba(255, 107, 107, 0.38);
+    color: inherit;
   }
   .dark textarea,
   .dark input {
-    caret-color: #ff2a2a;
+    caret-color: #ff6b6b;
   }
   .dark ::placeholder {
-    color: #6e1414;
+    color: #6e4a49;
+  }
+  /* A thick terminal-style block cursor instead of the thin I-beam, where the
+     browser supports it (Chromium 139+). */
+  @supports (caret-shape: block) {
+    .dark textarea,
+    .dark input {
+      caret-shape: block;
+    }
   }
 
-  /* CRT scanlines + vignette over the whole window; never intercepts input. */
-  .dark body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%),
-      repeating-linear-gradient(to bottom, rgba(255, 30, 30, 0.045) 0, rgba(255, 30, 30, 0.045) 1px, transparent 1px, transparent 3px);
-  }
-
-  /* A shell prompt in the top bar. */
+  /* A quiet shell prompt in the top bar. */
   .dark header::before {
     content: "root@notex:~$";
-    color: #ff3b3b;
+    color: #b9807b;
     font-size: 12px;
     letter-spacing: 0.02em;
-    opacity: 0.85;
   }
   .dark header {
-    border-bottom-color: #7a1414;
-    box-shadow: 0 1px 14px rgba(255, 0, 0, 0.18);
-  }
-
-  .dark button:hover:not(:disabled),
-  .dark input:focus,
-  .dark textarea:focus {
-    box-shadow: 0 0 8px rgba(255, 40, 40, 0.55);
+    border-bottom-color: #4d3739;
   }
   .dark button:disabled {
     opacity: 0.4;
   }
 
-  /* The preview page: a black "paper" with a red glow instead of white. */
+  /* The preview page: a slightly raised dark "paper". */
   .dark .mn-page {
-    background: #000000;
-    color: #ff4545;
-    border-color: #7a1414;
-    box-shadow:
-      0 0 0 1px rgba(255, 0, 0, 0.15),
-      0 0 28px rgba(255, 0, 0, 0.22),
-      inset 0 0 60px rgba(255, 0, 0, 0.05);
+    background: #2d2226;
+    color: #f7aaa2;
+    border-color: #4d3739;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
   }
   .dark .prose-mathnote h1,
   .dark .prose-mathnote h2,
   .dark .prose-mathnote h3 {
-    text-shadow: 0 0 10px rgba(255, 40, 40, 0.8);
+    color: #ff7b72;
   }
   .dark .prose-mathnote h1 {
-    border-bottom-color: #7a1414;
+    border-bottom-color: #5a4144;
   }
   .dark .prose-mathnote .note-block {
-    border-color: #7a1414;
-    box-shadow: inset 0 0 18px rgba(255, 0, 0, 0.07);
+    border-color: #5a4144;
+    background: rgba(255, 255, 255, 0.02);
   }
-  /* On the all-red page, errors need a different colour to stand out, and
-     ==highlight== (normally red) becomes a white-hot glow. */
+  .dark .prose-mathnote .note-block-title {
+    color: #ff7b72;
+  }
+  /* On a red-on-dark page the usual red error / red highlight would blend in,
+     so errors turn amber and ==highlight== becomes a marker-style chip. */
   .dark .prose-mathnote .math-error {
-    color: #ffc233;
-    border-bottom-color: #ffc233;
-    text-shadow: 0 0 6px rgba(255, 194, 51, 0.6);
+    color: #f2c14e;
+    border-bottom-color: #f2c14e;
   }
   .dark .prose-mathnote .text-highlight {
     color: #ffffff;
-    text-shadow: 0 0 8px #ff0000, 0 0 16px #ff0000;
+    background: rgba(255, 107, 107, 0.3);
+    padding: 0 0.15em;
   }
 
   /* Figures: default ink is a pale pink, red/blue annotations keep their
-     meaning but are brightened for the black background. */
+     meaning but are brightened for the dark background. */
   .dark .figure-canvas {
-    color: #ffd9d9;
+    color: #f3d3cf;
   }
   .dark .prose-mathnote .figure-empty .figure-canvas {
-    border-color: #7a1414;
+    border-color: #5a4144;
   }
   .dark .prose-mathnote .figure-edit-btn {
-    border-color: #7a1414;
-    color: #c02424;
+    border-color: #5a4144;
+    color: #b9807b;
   }
   .dark .figure-svg [stroke="#b91c1c"] {
-    stroke: #ff3b3b;
+    stroke: #ff6b6b;
   }
   .dark .figure-svg [fill="#b91c1c"] {
-    fill: #ff3b3b;
+    fill: #ff6b6b;
   }
   .dark .figure-svg [stroke="#1d4ed8"] {
-    stroke: #5ab0ff;
+    stroke: #6cb2ff;
   }
   .dark .figure-svg [fill="#1d4ed8"] {
-    fill: #5ab0ff;
+    fill: #6cb2ff;
   }
   .dark .figure-label[style*="#b91c1c"] {
-    color: #ff3b3b !important;
+    color: #ff6b6b !important;
   }
   .dark .figure-label[style*="#1d4ed8"] {
-    color: #5ab0ff !important;
+    color: #6cb2ff !important;
   }
   .dark .fig-swatch-black {
-    background: #ffd9d9 !important;
+    background: #f3d3cf !important;
   }
   .dark .fig-swatch-red {
-    background: #ff3b3b !important;
+    background: #ff6b6b !important;
   }
   .dark .fig-swatch-blue {
-    background: #5ab0ff !important;
+    background: #6cb2ff !important;
   }
 }

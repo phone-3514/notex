@@ -111,12 +111,22 @@ class Parser {
   // Relational chain: a=b, eps>0, etc.
   private parseRel(): MathNode {
     // A relation may be missing either operand ("= 9", "x ="): the absent
-    // side is an Empty node rather than a syntax error.
-    const startsWithRelop = this.peek().type === "RELOP" && this.peek().value !== "<";
-    let left: MathNode = startsWithRelop && !(this.angleDepth > 0 && this.peek().value === ">") ? { kind: "Empty" } : this.parseAdd();
+    // side is an Empty node rather than a syntax error. A bare "<" is the one
+    // wrinkle — it can also open an angle group ("<v>") — so at an operand
+    // position it's tried as that first, and read as a plain relation with a
+    // missing side ("(< oo)") only if no angle group parses there.
+    const first = this.peek();
+    const leadingRelop = first.type === "RELOP" && !(this.angleDepth > 0 && first.value === ">");
+    let left: MathNode;
+    if (!leadingRelop) left = this.parseAdd();
+    else if (first.value === "<") left = this.tryOperand() ?? { kind: "Empty" };
+    else left = { kind: "Empty" };
     while (this.peek().type === "RELOP" && !(this.angleDepth > 0 && this.peek().value === ">")) {
       const opTok = this.next();
-      const right: MathNode = this.atOperandEnd() ? { kind: "Empty" } : this.parseAdd();
+      let right: MathNode;
+      if (this.atOperandEnd()) right = { kind: "Empty" };
+      else if (this.peek().type === "RELOP") right = this.tryOperand() ?? { kind: "Empty" };
+      else right = this.parseAdd();
       left = { kind: "Relation", op: RELATION_SYMBOLS[opTok.value] ?? opTok.value, left, right };
     }
     // "|" as an infix "given/divides/such that" divider (e.g. "P(A|B)"
@@ -137,6 +147,24 @@ class Parser {
       return { kind: "Relation", op: "\\mid", left, right };
     }
     return left;
+  }
+
+  // Speculatively parses an operand, restoring the parser's position and
+  // nesting counters (an abandoned angle group/abs value leaves them
+  // incremented) and returning null if it doesn't parse.
+  private tryOperand(): MathNode | null {
+    const pos = this.pos;
+    const angleDepth = this.angleDepth;
+    const absDepth = this.absDepth;
+    try {
+      return this.parseAdd();
+    } catch (err) {
+      if (!(err instanceof MathSyntaxError)) throw err;
+      this.pos = pos;
+      this.angleDepth = angleDepth;
+      this.absDepth = absDepth;
+      return null;
+    }
   }
 
   private parseAdd(): MathNode {

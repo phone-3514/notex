@@ -60,7 +60,75 @@ function renderKatex(latex: string, displayMode: boolean): string {
   return `${fallback}${visual}`;
 }
 
+// Splits an inline math span into alternating math / plain-text pieces, where
+// "plain text" is a run of non-ASCII characters (Japanese prose etc.) sitting
+// outside any text(...) call. A whole expression handed to KaTeX is one
+// unbreakable box — it can't wrap — so a sentence written inside "@...@" (or
+// a ":::math" line) would run off the page. Pulling the prose out as ordinary
+// HTML text lets it wrap like the rest of the paragraph while the formula
+// pieces stay KaTeX. The pieces may be unbalanced ("f(" ... ")"), which the
+// parser tolerates. text(...) is left intact inside its math piece.
+function splitMathAndProse(raw: string): Array<{ prose: boolean; value: string }> {
+  const pieces: Array<{ prose: boolean; value: string }> = [];
+  let math = "";
+  let prose = "";
+  const flushMath = () => {
+    if (math) pieces.push({ prose: false, value: math });
+    math = "";
+  };
+  const flushProse = () => {
+    if (prose) pieces.push({ prose: true, value: prose });
+    prose = "";
+  };
+  let i = 0;
+  while (i < raw.length) {
+    const ch = raw[i];
+    if (ch === "t" && raw.startsWith("text(", i) && !/[A-Za-z]/.test(raw[i - 1] ?? "")) {
+      let depth = 0;
+      let j = i + 4;
+      do {
+        if (raw[j] === "(") depth++;
+        else if (raw[j] === ")") depth--;
+        j++;
+      } while (depth > 0 && j < raw.length);
+      flushProse();
+      math += raw.slice(i, j);
+      i = j;
+      continue;
+    }
+    if (ch.charCodeAt(0) > 0x7f) {
+      flushMath();
+      prose += ch;
+    } else {
+      flushProse();
+      math += ch;
+    }
+    i++;
+  }
+  flushMath();
+  flushProse();
+  return pieces;
+}
+
 function renderMath(raw: string, displayMode: boolean): string {
+  // Display math scrolls horizontally instead of wrapping, so only inline
+  // spans need their prose pulled out.
+  if (!displayMode && /[^\x00-\x7f]/.test(raw)) {
+    return splitMathAndProse(raw)
+      .map((piece) => {
+        if (piece.prose) return escapeHtml(piece.value);
+        // Keep the whitespace around a formula as ordinary text between pieces.
+        const lead = /^\s*/.exec(piece.value)![0];
+        const trail = /\s*$/.exec(piece.value)![0];
+        const core = piece.value.trim();
+        return core === "" ? escapeHtml(piece.value) : `${lead}${renderMathPiece(core, false)}${trail}`;
+      })
+      .join("");
+  }
+  return renderMathPiece(raw, displayMode);
+}
+
+function renderMathPiece(raw: string, displayMode: boolean): string {
   const trimmed = raw.trim();
   try {
     const latex = shorthandToLatex(trimmed);
@@ -362,7 +430,8 @@ export const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 // Rewrites the body of a ":::math" region into ordinary note lines. Each plain
 // line becomes an inline "@...@" math span (so consecutive lines read as one
 // paragraph, like "@...@" in prose); a line starting with "= " stays a
-// display equation exactly as it does outside the block, and "= align" /
+// display equation exactly as it does outside the block, "# heading" lines
+// stay headings, and "= align" /
 // "= <lhs>=cases" / "= matrix" open the usual multi-line display blocks, whose
 // raw rows (up to "end") are passed through untouched. One output line per
 // input line, so source-line anchors stay valid. A line that already contains
@@ -382,7 +451,10 @@ export function mathModeBodyLines(lines: string[]): string[] {
       continue;
     }
     const display = DISPLAY_PREFIX_RE.exec(line);
-    if (display) {
+    if (HEADING_RE.test(line)) {
+      // "# title" is still a heading inside the region, not a formula.
+      out.push(line);
+    } else if (display) {
       out.push(line);
       const expr = display[1];
       if (CASES_OPEN_RE.test(expr) || ALIGN_OPEN_RE.test(expr) || MATRIX_OPEN_RE.test(expr)) inBlock = true;
