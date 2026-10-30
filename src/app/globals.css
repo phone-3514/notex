@@ -634,89 +634,103 @@ body {
 }
 
 /* ------------------------------------------------------------------------
-   Terminal theme: the plain, no-frills one — pure black with bright green
-   text (like a classic terminal profile) and a grey block cursor. It sits on
-   top of the dark theme (html has both `dark` and `theme-terminal`), reusing
-   its layout and only swapping the palette, so everything colourful in the
-   tmux theme collapses to shades of green here. Screen-only, like the rest. */
+   Terminal theme: plain and rugged — pure black, muted (not fluorescent)
+   green text, no glow, no filled badges. It sits on top of the dark theme
+   (html has both `dark` and `theme-terminal`), reusing its layout and only
+   swapping the palette: everything colourful in the tmux theme collapses to
+   shades of one soft green, with outlines instead of solid highlights.
+   Screen-only, like the rest.
+
+   Palette: text #3fb950, soft emphasis #7bc77f, dim #2a7a36, rules #1b4d20;
+   errors #e5534b, unsaved #d29922. */
 @media screen {
   .theme-terminal {
     --background: #000000;
-    --foreground: #3df03d;
+    --foreground: #3fb950;
     --pane-bg: #000000;
-    --line: #145a14;
-    --color-neutral-50: #d6ffd6;
-    --color-neutral-100: #8bff8b;
-    --color-neutral-200: #3df03d;
-    --color-neutral-300: #2bc22b;
-    --color-neutral-400: #1fa31f;
-    --color-neutral-500: #178317;
-    --color-neutral-600: #0f5f0f;
-    --color-neutral-700: #0d4a0d;
-    --color-neutral-800: #082d08;
-    --color-neutral-900: #041504;
+    --line: #1b4d20;
+    --color-neutral-50: #b6e0b9;
+    --color-neutral-100: #7bc77f;
+    --color-neutral-200: #3fb950;
+    --color-neutral-300: #35a047;
+    --color-neutral-400: #2a7a36;
+    --color-neutral-500: #236629;
+    --color-neutral-600: #1b4d20;
+    --color-neutral-700: #153a19;
+    --color-neutral-800: #0e2611;
+    --color-neutral-900: #08130a;
     --color-neutral-950: #000000;
-    --m-var: #9dff9d;
-    --m-num: #d6ffd6;
-    --m-rel: #3df03d;
-    --m-bin: #3df03d;
-    --m-op: #8bff8b;
-    --m-punct: #1fa31f;
-    --m-sym: #8bff8b;
-    scrollbar-color: #145a14 #000000;
+    --m-var: #3fb950;
+    --m-num: #3fb950;
+    --m-rel: #3fb950;
+    --m-bin: #3fb950;
+    --m-op: #3fb950;
+    --m-punct: #2a7a36;
+    --m-sym: #3fb950;
+    scrollbar-color: #1b4d20 #000000;
   }
 
   .theme-terminal ::selection {
-    background: rgba(61, 240, 61, 0.3);
+    background: rgba(63, 185, 80, 0.3);
   }
   .theme-terminal textarea,
   .theme-terminal input,
   .theme-terminal .mn-editor-input {
-    caret-color: #f5f5f5;
+    caret-color: #d0d0d0;
   }
   .theme-terminal .mn-editor-input::selection {
-    background: rgba(61, 240, 61, 0.3);
+    background: rgba(63, 185, 80, 0.3);
   }
   .theme-terminal ::placeholder {
-    color: #178317;
+    color: #236629;
   }
 
+  /* Top bar: plain text prompt instead of a solid badge. */
   .theme-terminal header {
     background: #000000;
-    border-bottom-color: #145a14;
+    border-bottom-color: #1b4d20;
   }
   .theme-terminal header::before {
-    background: #3df03d;
-    color: #000000;
+    content: "notex>";
+    background: transparent;
+    color: #3fb950;
+    padding: 0;
+    font-weight: 400;
   }
   .theme-terminal .mn-status[data-status="saved"] {
-    color: #3df03d;
+    color: #2a7a36;
   }
   .theme-terminal .mn-status[data-status="saving"] {
-    color: #8bff8b;
+    color: #7bc77f;
   }
   .theme-terminal .mn-status[data-status="unsaved"] {
-    color: #ffb000;
+    color: #d29922;
   }
+  /* Selected toggles: outlined and brighter, not a solid block. */
   .theme-terminal [aria-pressed="true"] {
-    background: #3df03d;
-    border-color: #3df03d;
-    color: #000000;
+    background: #0e2611;
+    border-color: #3fb950;
+    color: #7bc77f;
+    font-weight: 400;
   }
   .theme-terminal button[data-tone] {
-    color: #3df03d;
-    border-color: #145a14;
+    color: #3fb950;
+    border-color: #1b4d20;
   }
   .theme-terminal button:not([aria-pressed="true"]):hover {
-    border-color: #3df03d;
+    border-color: #3fb950;
   }
 
   .theme-terminal .mn-pane-editor,
   .theme-terminal .mn-pane-preview {
-    --pane-line: #1f9d1f;
+    --pane-line: #1b4d20;
+  }
+  .theme-terminal .mn-pane::before {
+    color: #2a7a36;
+    font-weight: 400;
   }
   .theme-terminal .mn-page {
-    color: #3df03d;
+    color: #3fb950;
   }
   .theme-terminal .prose-mathnote h1,
   .theme-terminal .prose-mathnote h2,
@@ -724,16 +738,16 @@ body {
   .theme-terminal .prose-mathnote h4,
   .theme-terminal .prose-mathnote h5,
   .theme-terminal .prose-mathnote h6 {
-    color: #8bff8b;
+    color: #7bc77f;
   }
   .theme-terminal .prose-mathnote h1 {
-    border-bottom-color: #145a14;
+    border-bottom-color: #1b4d20;
   }
   .theme-terminal .prose-mathnote strong {
-    color: #d6ffd6;
+    color: #7bc77f;
   }
   .theme-terminal .prose-mathnote li::marker {
-    color: #8bff8b;
+    color: #2a7a36;
   }
   .theme-terminal .prose-mathnote .note-block,
   .theme-terminal .prose-mathnote .note-block-theorem,
@@ -745,82 +759,85 @@ body {
   .theme-terminal .prose-mathnote .note-block-remark,
   .theme-terminal .prose-mathnote .note-block-example,
   .theme-terminal .prose-mathnote .note-block-box {
-    --blk: #3df03d;
+    --blk: #2a7a36;
   }
   .theme-terminal .prose-mathnote .note-block-title {
-    color: #8bff8b;
+    color: #7bc77f;
   }
   /* Errors stay red — a monochrome error would be invisible. */
   .theme-terminal .prose-mathnote .math-error {
-    color: #ff5f5f;
-    border-bottom-color: #ff5f5f;
+    color: #e5534b;
+    border-bottom-color: #e5534b;
   }
   .theme-terminal .prose-mathnote .text-highlight {
-    color: #000000;
-    background: #3df03d;
+    color: #7bc77f;
+    background: transparent;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
-  /* Figures: green ink; annotations keep a distinguishable hue. */
+  /* Figures: green ink; annotations keep a distinguishable (muted) hue. */
   .theme-terminal .figure-canvas {
-    color: #3df03d;
+    color: #3fb950;
   }
   .theme-terminal .prose-mathnote .figure-empty .figure-canvas {
-    border-color: #145a14;
+    border-color: #1b4d20;
   }
   .theme-terminal .prose-mathnote .figure-edit-btn {
-    border-color: #145a14;
-    color: #1fa31f;
+    border-color: #1b4d20;
+    color: #2a7a36;
   }
   .theme-terminal .figure-svg [stroke="#b91c1c"] {
-    stroke: #ff5f5f;
+    stroke: #e5534b;
   }
   .theme-terminal .figure-svg [fill="#b91c1c"] {
-    fill: #ff5f5f;
+    fill: #e5534b;
   }
   .theme-terminal .figure-svg [stroke="#1d4ed8"] {
-    stroke: #66e0ff;
+    stroke: #58a6ff;
   }
   .theme-terminal .figure-svg [fill="#1d4ed8"] {
-    fill: #66e0ff;
+    fill: #58a6ff;
   }
   .theme-terminal .figure-label[style*="#b91c1c"] {
-    color: #ff5f5f !important;
+    color: #e5534b !important;
   }
   .theme-terminal .figure-label[style*="#1d4ed8"] {
-    color: #66e0ff !important;
+    color: #58a6ff !important;
   }
   .theme-terminal .fig-swatch-black {
-    background: #3df03d !important;
+    background: #3fb950 !important;
   }
   .theme-terminal .fig-swatch-red {
-    background: #ff5f5f !important;
+    background: #e5534b !important;
   }
   .theme-terminal .fig-swatch-blue {
-    background: #66e0ff !important;
+    background: #58a6ff !important;
   }
 
-  /* Editor colours: shades of green only (brightness, not hue, carries the meaning). */
+  /* Editor: one green, with only a soft lighter shade and a dim shade. */
   .theme-terminal .mn-hl-layer {
-    color: #3df03d;
-    --hl-math: #9dff9d;
-    --hl-num: #d6ffd6;
-    --hl-kw: #ffffff;
-    --hl-fn: #8bff8b;
-    --hl-sym: #8bff8b;
-    --hl-op: #d6ffd6;
-    --hl-sub: #8bff8b;
-    --hl-punc: #1fa31f;
-    --hl-str: #b8ffb8;
-    --hl-delim: #1fa31f;
-    --hl-heading: #8bff8b;
-    --hl-fence: #1fa31f;
-    --hl-fence-type: #8bff8b;
-    --hl-fence-title: #3df03d;
-    --hl-list: #8bff8b;
-    --hl-dim: #178317;
-    --hl-bold: #ffffff;
-    --hl-mark-bg: rgba(61, 240, 61, 0.25);
-    --hl-red: #ff5f5f;
-    --hl-blue: #66e0ff;
+    color: #3fb950;
+    --hl-math: #3fb950;
+    --hl-num: #3fb950;
+    --hl-kw: #7bc77f;
+    --hl-fn: #7bc77f;
+    --hl-sym: #7bc77f;
+    --hl-op: #3fb950;
+    --hl-sub: #3fb950;
+    --hl-punc: #2a7a36;
+    --hl-str: #7bc77f;
+    --hl-delim: #2a7a36;
+    --hl-heading: #7bc77f;
+    --hl-fence: #2a7a36;
+    --hl-fence-type: #7bc77f;
+    --hl-fence-title: #3fb950;
+    --hl-list: #2a7a36;
+    --hl-dim: #236629;
+    --hl-bold: #7bc77f;
+    --hl-mark-bg: rgba(63, 185, 80, 0.2);
+    --hl-red: #e5534b;
+    --hl-blue: #58a6ff;
   }
 }
