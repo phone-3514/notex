@@ -576,6 +576,71 @@ describe("shorthandToLatex — vectors", () => {
     });
   });
 
+  describe("probability / complex-analysis function names: Var, Cov, Pr, Re, Im", () => {
+    it("render upright, like sin/log", () => {
+      expect(shorthandToLatex("Var(X)")).toBe("\\operatorname{Var}(X)");
+      expect(shorthandToLatex("Cov(X,Y)")).toBe("\\operatorname{Cov}(X,Y)");
+      expect(shorthandToLatex("Re(z)")).toBe("\\operatorname{Re}(z)");
+      expect(shorthandToLatex("Im(z)")).toBe("\\operatorname{Im}(z)");
+      expect(shorthandToLatex("Pr(A)")).toBe("\\Pr(A)");
+    });
+
+    it("work with brackets, juxtaposition and the rest of the DSL", () => {
+      expect(shorthandToLatex("Var(X) = E[X^2] - [E(X)]^2")).toBe(
+        "\\operatorname{Var}(X)\\ =\\ E[X^{2}]-[E(X)]^{2}"
+      );
+      expect(shorthandToLatex("Pr A")).toBe("\\Pr A");
+      expect(shorthandToLatex("Var X")).toBe("\\operatorname{Var}X");
+      expect(shorthandToLatex("Pr(A|B)")).toBe("\\Pr(A\\ \\mid\\ B)");
+    });
+
+    it("render as valid KaTeX", () => {
+      for (const src of ["Var(X)", "Cov(X,Y)", "Re(z)", "Im(z)", "Pr(A)", "Var(X) = E[X^2] - [E(X)]^2"]) {
+        expect(() => katex.renderToString(shorthandToLatex(src), { throwOnError: true }), src).not.toThrow();
+      }
+    });
+  });
+
+  describe("square brackets", () => {
+    it("[E(X)]^2 groups like parentheses, with the exponent on the closing bracket", () => {
+      expect(shorthandToLatex("[E(X)]^2")).toBe("[E(X)]^{2}");
+      expect(shorthandToLatex("E[X]^2")).toBe("E[X]^{2}");
+      expect(shorthandToLatex("E[X^2] - [E(X)]^2")).toBe("E[X^{2}]-[E(X)]^{2}");
+    });
+
+    it("comma lists and nesting: [a,b], [[1,2],[3,4]]", () => {
+      expect(shorthandToLatex("[a,b]")).toBe("[a,b]");
+      expect(shorthandToLatex("[[1,2],[3,4]]")).toBe("[[1,2],[3,4]]");
+    });
+
+    it("half-open intervals mix the two bracket kinds", () => {
+      expect(shorthandToLatex("[0,1)")).toBe("[0,1)");
+      expect(shorthandToLatex("(0,1]")).toBe("(0,1]");
+      expect(shorthandToLatex("a in [0,oo)")).toBe("a\\ \\in\\ [0,\\infty)");
+    });
+
+    it("keeps its brackets where a plain '(...)' would be unwrapped as redundant grouping", () => {
+      expect(shorthandToLatex("x^[n]")).toBe("x^{[n]}");
+      expect(shorthandToLatex("x^(n)")).toBe("x^{n}");
+    });
+
+    it("tolerates a stray or unclosed bracket, like parentheses", () => {
+      expect(shorthandToLatex("x]")).toBe("x]");
+      expect(shorthandToLatex("[x")).toBe("[x");
+      expect(shorthandToLatex("[]")).toBe("[]");
+    });
+
+    it("still rejects a bracket closed by something else", () => {
+      expect(() => shorthandToLatex("[x}")).toThrow(MathSyntaxError);
+    });
+
+    it("renders as valid KaTeX", () => {
+      for (const src of ["[E(X)]^2", "[0,1)", "(0,1]", "E[X^2] - [E(X)]^2", "[[1,2],[3,4]]"]) {
+        expect(() => katex.renderToString(shorthandToLatex(src), { throwOnError: true }), src).not.toThrow();
+      }
+    });
+  });
+
   it("lim with a letter target gets a space after \\to (no undefined \\toa)", () => {
     expect(shorthandToLatex("lim x->a f(x)")).toBe("\\lim_{x\\to a}f(x)");
     expect(shorthandToLatex("lim x->0 f(x)")).toBe("\\lim_{x\\to0}f(x)");

@@ -67,14 +67,13 @@ class Parser {
     // leftover token still is one.
     const parts: MathNode[] = [];
     while (this.peek().type !== "EOF") {
-      if (this.isSymbol(")")) {
-        this.next();
-        parts.push({ kind: "Sym", name: ")" });
+      if (this.isSymbol(")") || this.isSymbol("]")) {
+        parts.push({ kind: "Sym", name: this.next().value });
         continue;
       }
       parts.push(this.parseSequence());
       const trailing = this.peek();
-      if (trailing.type !== "EOF" && !this.isSymbol(")")) {
+      if (trailing.type !== "EOF" && !this.isSymbol(")") && !this.isSymbol("]")) {
         throw new MathSyntaxError(`Unexpected token "${trailing.value}"`, trailing.pos);
       }
     }
@@ -90,7 +89,7 @@ class Parser {
     if (t.type === "EOF") return true;
     if (t.type === "RELOP") return t.value !== "<";
     if (t.type === "SYMBOL") {
-      return t.value === ")" || t.value === "}" || t.value === "," || (t.value === "|" && this.absDepth > 0);
+      return t.value === ")" || t.value === "]" || t.value === "}" || t.value === "," || (t.value === "|" && this.absDepth > 0);
     }
     return false;
   }
@@ -253,7 +252,7 @@ class Parser {
   // factor of a fresh expression) still handles a leading "<" — see there.
   private startsFactor(t: Token): boolean {
     if (t.type === "NUMBER" || t.type === "IDENT" || t.type === "LITERAL" || t.type === "TEXT_LITERAL") return true;
-    if (t.type === "SYMBOL" && (t.value === "(" || t.value === ":" || t.value === "{")) return true;
+    if (t.type === "SYMBOL" && (t.value === "(" || t.value === "[" || t.value === ":" || t.value === "{")) return true;
     if (t.type === "SYMBOL" && t.value === "|" && this.absDepth === 0) return true;
     return false;
   }
@@ -310,7 +309,7 @@ class Parser {
       return { kind: "Num", value: t.value };
     }
 
-    if (t.type === "SYMBOL" && t.value === "(") {
+    if (t.type === "SYMBOL" && (t.value === "(" || t.value === "[")) {
       return this.parseParenGroup();
     }
 
@@ -373,25 +372,35 @@ class Parser {
   // multiple args, tuples, and comma-separated expression lists like
   // "f(x,y)", "(x,y)", "F(x1,...,xn)".
   private parseParenGroup(): MathNode {
-    this.next(); // '('
+    const open = this.next().value; // "(" or "["
+    const isCloser = () => this.isSymbol(")") || this.isSymbol("]");
     // "()" and "(a,)" have an Empty slot rather than being syntax errors.
     const parseItem = (): MathNode =>
-      this.isSymbol(")") || this.isSymbol(",") || this.peek().type === "EOF" ? { kind: "Empty" } : this.parseRel();
+      isCloser() || this.isSymbol(",") || this.peek().type === "EOF" ? { kind: "Empty" } : this.parseRel();
     const items = [parseItem()];
     while (this.isSymbol(",")) {
       this.next();
       items.push(parseItem());
     }
     const close = this.peek();
-    // A "(" never closed before the end of the expression ("x(", "(x+1") is
-    // kept as a literal "(" instead of an error; any other token where the
-    // ")" should be (e.g. "(x}") is still a real mistake.
+    // A bracket never closed before the end of the expression ("x(", "(x+1")
+    // is kept as a literal opener instead of an error; any other token where
+    // the closer should be (e.g. "(x}") is still a real mistake. Either
+    // closer may end either opener, which is what makes half-open intervals
+    // "[0,1)" and "(0,1]" work.
     const unclosed = close.type === "EOF";
-    if (!unclosed && !(close.type === "SYMBOL" && close.value === ")")) {
-      throw new MathSyntaxError('Missing closing ")"', close.pos);
+    if (!unclosed && !isCloser()) {
+      throw new MathSyntaxError(`Missing closing "${open === "[" ? "]" : ")"}"`, close.pos);
     }
+    const closer = unclosed ? undefined : close.value;
     if (!unclosed) this.next();
-    return items.length === 1 ? { kind: "Group", inner: items[0], unclosed } : { kind: "ArgList", items, unclosed };
+    const brackets = {
+      ...(open === "[" ? { open: "[" as const } : {}),
+      ...(closer === "]" ? { close: "]" as const } : {}),
+    };
+    return items.length === 1
+      ? { kind: "Group", inner: items[0], ...brackets, unclosed }
+      : { kind: "ArgList", items, ...brackets, unclosed };
   }
 
   private parseAbsoluteValue(): MathNode {
@@ -607,7 +616,9 @@ class Parser {
   // unwrap them; parens used as literal displayed text (e.g. `f(x)`) are
   // left as Group nodes elsewhere and rendered as-is.
   private unwrapGroup(node: MathNode): MathNode {
-    return node.kind === "Group" ? node.inner : node;
+    // Only plain "(...)" is redundant grouping; "[...]" and mixed
+    // brackets carry meaning and stay.
+    return node.kind === "Group" && !node.open && !node.close ? node.inner : node;
   }
 
   private parseSqrt(): MathNode {

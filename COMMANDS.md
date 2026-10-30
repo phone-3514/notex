@@ -363,6 +363,11 @@ Intentionally unsupported / ambiguous forms:
 | `max` | \max x | `\max x` | `maxx` |
 | `sup` | \sup x | `\sup x` | `supx` |
 | `inf` | \inf x | `\inf x` | `infx` |
+| `Var` | \operatorname{Var}x | `\operatorname{Var}x` | `Varx` |
+| `Cov` | \operatorname{Cov}x | `\operatorname{Cov}x` | `Covx` |
+| `Pr` | \Pr x | `\Pr x` | `Prx` |
+| `Re` | \operatorname{Re}x | `\operatorname{Re}x` | `Rex` |
+| `Im` | \operatorname{Im}x | `\operatorname{Im}x` | `Imx` |
 | `log_b(x) (log with an explicit base)` | \log_{10}(100) | `\log_{10}(100)` | `log_10(100)` |
 
 ## Operators

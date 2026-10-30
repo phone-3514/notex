@@ -30,8 +30,13 @@ export type MathNode =
       constraintValue: MathNode | null;
     }
   | { kind: "Empty" } // a missing operand beside a relation or inside "()" — e.g. the left side of "= 9"; renders as nothing
-  | { kind: "Group"; inner: MathNode; unclosed?: boolean } // explicit parentheses, rendered literally (unclosed: no ")" was typed)
-  | { kind: "ArgList"; items: MathNode[]; unclosed?: boolean } // parenthesized comma list: f(x,y), (x,y), F(x1,...,xn)
+  // Explicit brackets, rendered literally. `open`/`close` are set only when
+  // they aren't the default "(" / ")": "[E(X)]^2" has open "[" and close "]",
+  // and a half-open interval "[0,1)" has open "[" only. `unclosed`: no
+  // closing bracket was typed.
+  | { kind: "Group"; inner: MathNode; open?: "["; close?: "]"; unclosed?: boolean }
+  // Bracketed comma list: f(x,y), (x,y), [a,b], F(x1,...,xn)
+  | { kind: "ArgList"; items: MathNode[]; open?: "["; close?: "]"; unclosed?: boolean }
   | { kind: "Infix"; op: "+" | "-" | "*"; left: MathNode; right: MathNode }
   | { kind: "Neg"; arg: MathNode } // unary minus, e.g. the "-x" branch of a cases block
   | { kind: "Vector"; style: "vec" | "colvec"; items: MathNode[] } // vec(a,b,c) / colvec(a,b,c)

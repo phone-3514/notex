@@ -1,5 +1,6 @@
 import { MathNode } from "@/parser/ast";
 import { parseMath } from "@/parser/parseMath";
+import { FUNCTION_COMMANDS } from "@/parser/dictionaries";
 
 // A LaTeX control word (\sin, \forall, \infty, ...) greedily consumes any
 // letters that immediately follow it, so a literal space must be inserted
@@ -112,7 +113,7 @@ export function nodeToLatex(node: MathNode): string {
     case "Overline":
       return `\\overline${braces(nodeToLatex(node.arg))}`;
     case "Func": {
-      const name = `\\${node.name}`;
+      const name = FUNCTION_COMMANDS[node.name] ?? `\\${node.name}`;
       return node.arg ? joinTight([name, nodeToLatex(node.arg)]) : name;
     }
     case "Differential":
@@ -152,11 +153,11 @@ export function nodeToLatex(node: MathNode): string {
     case "Empty":
       return "";
     case "Group":
-      return `(${nodeToLatex(node.inner)}${node.unclosed ? "" : ")"}`;
+      return `${node.open ?? "("}${nodeToLatex(node.inner)}${node.unclosed ? "" : (node.close ?? ")")}`;
     case "ArgList":
       // Tight comma spacing, no gap: function args and tuples read as one
       // unit, unlike top-level "Sequence" clauses which get a "\;" gap.
-      return `(${node.items.map(nodeToLatex).join(",")}${node.unclosed ? "" : ")"}`;
+      return `${node.open ?? "("}${node.items.map(nodeToLatex).join(",")}${node.unclosed ? "" : (node.close ?? ")")}`;
     case "Infix":
       if (node.op === "*") {
         return joinTight([nodeToLatex(node.left), "\\cdot", nodeToLatex(node.right)]);

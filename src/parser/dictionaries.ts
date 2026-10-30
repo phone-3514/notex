@@ -82,7 +82,23 @@ export const FUNCTION_NAMES = [
   "max",
   "sup",
   "inf",
+  // Probability / complex analysis. "Pr" is a built-in LaTeX operator; the
+  // others have no command of their own and render via \operatorname (see
+  // FUNCTION_COMMANDS).
+  "Var",
+  "Cov",
+  "Pr",
+  "Re",
+  "Im",
 ] as const;
+
+// LaTeX for the function names that aren't simply "\<name>".
+export const FUNCTION_COMMANDS: Record<string, string> = {
+  Var: "\\operatorname{Var}",
+  Cov: "\\operatorname{Cov}",
+  Re: "\\operatorname{Re}",
+  Im: "\\operatorname{Im}",
+};
 
 // Multi-letter keywords recognized as whole identifiers (checked before generic ident rules).
 export const WORD_KEYWORDS: Record<string, string> = {
