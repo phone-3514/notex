@@ -620,6 +620,20 @@ describe("shorthandToLatex — vectors", () => {
     });
   });
 
+  describe("section sign and pilcrow", () => {
+    it("section -> \\S (§), pilcrow -> \\P (¶)", () => {
+      expect(shorthandToLatex("section 3.2")).toBe("\\S3.2");
+      expect(shorthandToLatex("section a")).toBe("\\S a");
+      expect(shorthandToLatex("pilcrow")).toBe("\\P");
+    });
+
+    it("render as valid KaTeX", () => {
+      for (const src of ["section 3.2", "section", "pilcrow", "section 3 quad pilcrow 2"]) {
+        expect(() => katex.renderToString(shorthandToLatex(src), { throwOnError: true }), src).not.toThrow();
+      }
+    });
+  });
+
   describe("quad / qquad: explicit horizontal space", () => {
     it("map to \\quad and \\qquad", () => {
       expect(shorthandToLatex("x quad y")).toBe("x\\quad y");

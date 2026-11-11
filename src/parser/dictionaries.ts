@@ -247,6 +247,10 @@ export const WORD_KEYWORDS: Record<string, string> = {
   models: "\\models",
   Vdash: "\\Vdash",
 
+  // Section sign (S stacked over S) and pilcrow — for citing "§3.2" and the like.
+  section: "\\S",
+  pilcrow: "\\P",
+
   // Explicit horizontal spaces, for gaps the automatic rule doesn't cover.
   quad: "\\quad",
   qquad: "\\qquad",

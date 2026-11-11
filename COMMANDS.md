@@ -234,6 +234,8 @@ Intentionally unsupported / ambiguous forms:
 | `\X (literal escape, e.g. "\N")` | N | `N` | `\N` |
 | `text(words) (upright prose inside math, e.g. "such that")` | \text{such that} | `\text{such that}` | `text(such that)` |
 | `...` | \ldots | `\ldots` | `...` |
+| `section` | \S | `\S` | `section` |
+| `pilcrow` | \P | `\P` | `pilcrow` |
 | `quad` | \quad | `\quad` | `quad` |
 | `qquad` | \qquad | `\qquad` | `qquad` |
 
