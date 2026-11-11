@@ -237,7 +237,6 @@ Intentionally unsupported / ambiguous forms:
 | `section` | \S | `\S` | `section` |
 | `pilcrow` | \P | `\P` | `pilcrow` |
 | `quad` | \quad | `\quad` | `quad` |
-| `qquad` | \qquad | `\qquad` | `qquad` |
 
 ## Algebra
 

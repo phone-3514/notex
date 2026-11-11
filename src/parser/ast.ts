@@ -4,10 +4,7 @@
 export type MathNode =
   | { kind: "Num"; value: string }
   | { kind: "Sym"; name: string } // resolved literal LaTeX symbol/identifier text
-  // Implicit juxtaposition (concatenation). `gaps[i]` (when present) means a
-  // visible space belongs between items[i - 1] and items[i] — see the parser's
-  // juxtaposition gap rule.
-  | { kind: "Row"; items: MathNode[]; gaps?: boolean[] }
+  | { kind: "Row"; items: MathNode[] } // implicit juxtaposition (concatenation)
   | { kind: "Frac"; num: MathNode; den: MathNode }
   | { kind: "Pow"; base: MathNode; exp: MathNode }
   | { kind: "Sub"; base: MathNode; sub: MathNode }

@@ -251,9 +251,8 @@ export const WORD_KEYWORDS: Record<string, string> = {
   section: "\\S",
   pilcrow: "\\P",
 
-  // Explicit horizontal spaces, for gaps the automatic rule doesn't cover.
+  // Explicit horizontal space (a wide gap), for spacing out parts of a line.
   quad: "\\quad",
-  qquad: "\\qquad",
 
   // Arrows beyond the existing "to"/"mapsto"/"gets".
   hookrightarrow: "\\hookrightarrow",

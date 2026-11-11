@@ -216,9 +216,11 @@ class Parser {
       if (this.isSymbol("|") && this.absDepth === 0) {
         const checkpoint = this.pos;
         try {
-          const gap = this.juxtapositionGap();
           const right = this.parseFactor();
-          left = this.juxtapose(left, right, gap);
+          left =
+            left.kind === "Row"
+              ? { kind: "Row", items: [...left.items, right] }
+              : { kind: "Row", items: [left, right] };
           continue;
         } catch (err) {
           if (!(err instanceof MathSyntaxError)) throw err;
@@ -227,50 +229,16 @@ class Parser {
         }
       }
       if (this.startsFactor(this.peek())) {
-        const gap = this.juxtapositionGap();
         const right = this.parseFactor();
-        left = this.juxtapose(left, right, gap);
+        left =
+          left.kind === "Row"
+            ? { kind: "Row", items: [...left.items, right] }
+            : { kind: "Row", items: [left, right] };
         continue;
       }
       break;
     }
     return left;
-  }
-
-  // Appends `right` to `left` as juxtaposed factors, recording whether a
-  // visible gap belongs between them.
-  private juxtapose(left: MathNode, right: MathNode, gap: boolean): MathNode {
-    const items = left.kind === "Row" ? [...left.items, right] : [left, right];
-    const gaps = left.kind === "Row" ? [...(left.gaps ?? left.items.map(() => false)), gap] : [false, gap];
-    return gaps.some(Boolean) ? { kind: "Row", items, gaps } : { kind: "Row", items };
-  }
-
-  // Whitespace is normally meaningless in the shorthand ("sin x", "2 x" and
-  // "ab" all juxtapose tightly), but one place is different: a space written
-  // right after a closing bracket — "{0} (because …)", "(x+1) (x-1)" — is the
-  // author asking for a visible gap there, since two adjacent bracketed groups
-  // otherwise butt together. It applies only when the space follows ")", "]"
-  // or "}" and the next thing is an operand (bracket, number, or an ordinary
-  // name). Words that are operators/relations ("in", "cup", "to", …) already
-  // get TeX's own spacing, and a bare colon is punctuation, so neither gets
-  // one. Must be called with the previous factor consumed and the next not.
-  private juxtapositionGap(): boolean {
-    const next = this.peek();
-    const prev = this.tokens[this.pos - 1];
-    if (!next.spaceBefore || prev?.type !== "SYMBOL" || !(prev.value === ")" || prev.value === "]" || prev.value === "}")) {
-      return false;
-    }
-    switch (next.type) {
-      case "NUMBER":
-      case "LITERAL":
-        return true;
-      case "SYMBOL":
-        return next.value === "(" || next.value === "[" || next.value === "{";
-      case "IDENT":
-        return !(next.value in WORD_KEYWORDS);
-      default:
-        return false;
-    }
   }
 
   // Deliberately does NOT recognize a bare "<" (RELOP) as starting a
