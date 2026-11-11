@@ -590,10 +590,21 @@ describe("shorthandToLatex — vectors", () => {
     });
   });
 
-  describe("quad: explicit horizontal space", () => {
-    it("maps to \\quad", () => {
+  describe("quad / qquad: explicit horizontal space", () => {
+    it("quad maps to \\quad", () => {
       expect(shorthandToLatex("x quad y")).toBe("x\\quad y");
       expect(shorthandToLatex("(a) quad (b)")).toBe("(a)\\quad(b)");
+    });
+
+    it("qquad maps to \\qquad (twice the width)", () => {
+      expect(shorthandToLatex("x qquad y")).toBe("x\\qquad y");
+      expect(shorthandToLatex("(a) qquad (b)")).toBe("(a)\\qquad(b)");
+    });
+
+    it("render as valid KaTeX", () => {
+      for (const src of ["x quad y", "x qquad y", "{bf(0)} qquad (because"]) {
+        expect(() => katex.renderToString(shorthandToLatex(src), { throwOnError: true }), src).not.toThrow();
+      }
     });
   });
 
