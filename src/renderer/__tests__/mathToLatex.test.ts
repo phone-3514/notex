@@ -622,6 +622,31 @@ describe("shorthandToLatex — vectors", () => {
     });
   });
 
+  describe("an angle group right after a factor (coefficient, quad, …) vs. 'less than'", () => {
+    it("2<a,b> is a coefficient times an inner product, not '2 < a, b >'", () => {
+      expect(shorthandToLatex("2<a,b>")).toBe("2\\langle a,b\\rangle");
+      expect(shorthandToLatex("2<a,b> + c")).toBe("2\\langle a,b\\rangle+c");
+      expect(shorthandToLatex("x + 2<a,b> + ||y||^2")).toBe("x+2\\langle a,b\\rangle+\\lvert\\lvert y\\rvert\\rvert^{2}");
+    });
+
+    it("works after quad, and with a relation following the group", () => {
+      expect(shorthandToLatex("(1)quad <a,b> = <c,d>")).toBe("(1)\\quad\\langle a,b\\rangle\\ =\\ \\langle c,d\\rangle");
+      expect(shorthandToLatex("quad <a,b>")).toBe("\\quad\\langle a,b\\rangle");
+    });
+
+    it("two groups side by side multiply", () => {
+      expect(shorthandToLatex("<a,b> <c,d>")).toBe("\\langle a,b\\rangle\\langle c,d\\rangle");
+    });
+
+    it("an ordinary '<' still means less-than, including chains that continue past a later '>'", () => {
+      expect(shorthandToLatex("x<y")).toBe("x\\ <\\ y");
+      expect(shorthandToLatex("1<2")).toBe("1\\ <\\ 2");
+      expect(shorthandToLatex("f(x)<g(x)")).toBe("f(x)\\ <\\ g(x)");
+      expect(shorthandToLatex("x<y, z>w")).toBe("x\\ <\\ y,\\;z\\ >\\ w");
+      expect(shorthandToLatex("x<=y")).toBe("x\\ \\leq\\ y");
+    });
+  });
+
   describe("square brackets", () => {
     it("[E(X)]^2 groups like parentheses, with the exponent on the closing bracket", () => {
       expect(shorthandToLatex("[E(X)]^2")).toBe("[E(X)]^{2}");

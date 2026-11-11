@@ -228,6 +228,23 @@ class Parser {
           break;
         }
       }
+      // "2<a,b> + c": a "<" right after a factor is normally "less than"
+      // ("x<y"), but it can also open an angle group juxtaposed onto the
+      // factor (a coefficient times an inner product). Try the angle-group
+      // reading speculatively and keep it only if it closes with ">" and what
+      // follows isn't another operand — "x<y, z>w" is still an inequality
+      // chain, while "2<a,b> + c" and "2<a,b>" are a product.
+      if (this.peek().type === "RELOP" && this.peek().value === "<") {
+        const right = this.tryJuxtaposedAngleGroup();
+        if (right) {
+          left =
+            left.kind === "Row"
+              ? { kind: "Row", items: [...left.items, right] }
+              : { kind: "Row", items: [left, right] };
+          continue;
+        }
+        break;
+      }
       if (this.startsFactor(this.peek())) {
         const right = this.parseFactor();
         left =
@@ -239,6 +256,33 @@ class Parser {
       break;
     }
     return left;
+  }
+
+  // See the "<" branch in parseTerm: parses "<...>" as an angle group when it
+  // is closed by ">" and not followed by another operand; otherwise restores
+  // the parser's state and returns null so "<" is read as "less than".
+  private tryJuxtaposedAngleGroup(): MathNode | null {
+    const pos = this.pos;
+    const angleDepth = this.angleDepth;
+    const absDepth = this.absDepth;
+    const restore = () => {
+      this.pos = pos;
+      this.angleDepth = angleDepth;
+      this.absDepth = absDepth;
+    };
+    try {
+      const group = this.parseAngleGroup();
+      const after = this.peek();
+      if (this.startsFactor(after) || (after.type === "RELOP" && after.value === "<")) {
+        restore();
+        return null;
+      }
+      return group;
+    } catch (err) {
+      if (!(err instanceof MathSyntaxError)) throw err;
+      restore();
+      return null;
+    }
   }
 
   // Deliberately does NOT recognize a bare "<" (RELOP) as starting a

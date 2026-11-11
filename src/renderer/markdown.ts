@@ -238,7 +238,9 @@ function renderAlignBlock(rows: string[], hasEnd: boolean, rawText: string): str
       throw new Error('Missing "end" to close the align block');
     }
     const latex = buildAlignLatex(rows);
-    return renderKatex(latex, true);
+    // Inline (text-style) math, not display: the aligned rows sit at the left
+    // like ordinary text, at normal size, with the "=" signs lined up.
+    return renderKatex(latex, false);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Invalid align syntax";
     return `<div class="math-error" title="${escapeHtml(message)}">${escapeHtml(rawText)}</div>`;
@@ -598,7 +600,8 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
     }
 
     // "align" block: "= align\n...\nend". Same multi-line, top-of-loop
-    // detection as the cases block above.
+    // detection as the cases block above. Unlike cases/matrix it is laid out
+    // as left-aligned inline math (".math-align"), not a centred display.
     const alignOpen = displayLine ? ALIGN_OPEN_RE.exec(displayLine[1]) : null;
     if (alignOpen) {
       const startLine = baseLine + i;
@@ -608,7 +611,7 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
       const rawText = lines.slice(openLineIdx, endIdx).join("\n");
       i = endIdx;
       const html = renderAlignBlock(rows, hasEnd, rawText);
-      out.push(`<div class="math-display" data-src-line="${startLine}">${html}</div>`);
+      out.push(`<div class="math-align" data-src-line="${startLine}">${html}</div>`);
       continue;
     }
 

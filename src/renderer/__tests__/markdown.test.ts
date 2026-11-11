@@ -636,7 +636,8 @@ describe("renderMarkdownToHtml", () => {
       const html = renderMarkdownToHtml(
         ":::math\n= align\nf(x)\n= x^2+2x+1\n= (x+1)^2\nend\n= f(x)=cases\n1, x>0\n0, x<=0\nend\n:::"
       );
-      expect(html.match(/class="math-display"/g)).toHaveLength(2);
+      expect(html.match(/class="math-align"/g)).toHaveLength(1);
+      expect(html.match(/class="math-display"/g)).toHaveLength(1); // the cases block stays a display
       expect(html).toContain("\\begin{aligned}");
       expect(html).toContain("\\begin{cases}");
       expect(html).not.toContain("math-error");
@@ -722,9 +723,12 @@ describe("renderMarkdownToHtml", () => {
   });
 
   describe("align blocks: '= align ... end'", () => {
-    it("renders the spec's worked example as one display-math node", () => {
+    it("renders the spec's worked example as one left-aligned inline-style block, not a centred display", () => {
       const html = renderMarkdownToHtml("= align\nf(x)\n= x^2+2x+1\n= (x+1)^2\nend");
-      expect(html.match(/class="math-display"/g)).toHaveLength(1);
+      expect(html.match(/class="math-align"/g)).toHaveLength(1);
+      expect(html).not.toContain("math-display");
+      // Inline (text-style) KaTeX, not display-mode: no ".katex-display" wrapper.
+      expect(html).not.toContain("katex-display");
       expect(html).toContain("katex");
       expect(html).not.toContain("math-error");
       expect(html).toContain("\\begin{aligned}");
@@ -735,6 +739,19 @@ describe("renderMarkdownToHtml", () => {
       const html = renderMarkdownToHtml("= align\nf(x)=x+1\nend");
       expect(html).toContain("katex");
       expect(html).not.toContain("math-error");
+    });
+
+    it("keeps the '=' signs of every row in one column (aligned environment, '&=')", () => {
+      const html = renderMarkdownToHtml("= align\nf(x)\n= x^2+2x+1\n= (x+1)^2\nend");
+      expect(html).toContain("f(x)\\\\&amp;= x^{2}+2x+1\\\\&amp;= (x+1)^{2}");
+    });
+
+    it("an align row with a coefficient before an inner product <…> is accepted", () => {
+      const html = renderMarkdownToHtml(
+        "= align\n||bf(x)||^2 = <bf(x)_1+bf(x)_2, bf(x)_1+bf(x)_2>\n= ||bf(x)_1||^2 + 2<bf(x)_1,bf(x)_2> + ||bf(x)_2||^2\nend"
+      );
+      expect(html).not.toContain("math-error");
+      expect(html).toContain("2\\langle");
     });
 
     it("does not mistake '<=' / '>=' for the alignment '='", () => {

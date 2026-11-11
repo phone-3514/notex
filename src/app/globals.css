@@ -86,6 +86,13 @@ body {
   overflow-x: auto;
   font-size: 1.15em;
 }
+/* "= align" blocks: left-aligned, normal-size (inline-style) rows with the
+   "=" signs lined up — deliberately not centred like .math-display. */
+.prose-mathnote .math-align {
+  margin: 0.6em 0;
+  overflow-x: auto;
+  text-align: left;
+}
 .prose-mathnote .note-block {
   border: 1px solid var(--color-neutral-300, #d4d4d4);
   padding: 0.7em 0.9em;
@@ -329,6 +336,9 @@ header input {
   .prose-mathnote .math-display {
     font-size: 1em !important;
     margin: 0.5em 0 !important;
+  }
+  .prose-mathnote .math-align {
+    margin: 0.4em 0 !important;
   }
   .prose-mathnote .katex {
     font-size: 1em !important;
