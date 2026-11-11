@@ -106,6 +106,8 @@ describe("COMMAND_ROWS", () => {
         ";hl",
         ";t",
         ";align",
+        ";case",
+        ";cases",
         ";matrix",
       ].sort()
     );
@@ -118,6 +120,9 @@ describe("COMMAND_ROWS", () => {
 
     const mathMode = noteRows.find((r) => r.command === ";math")!;
     expect(mathMode.rendered).toBe(":::math\n\n:::");
+
+    const cases = noteRows.find((r) => r.command === ";case")!;
+    expect(cases.rendered).toBe("= =cases\n, \n, \nend");
 
     const m = noteRows.find((r) => r.command === ";m")!;
     expect(m.rendered).toBe("= ");

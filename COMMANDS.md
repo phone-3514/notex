@@ -542,6 +542,8 @@ Intentionally unsupported / ambiguous forms:
 | `;hl` | ==== | `—` | `;hl + Tab` |
 | `;t` | text() | `—` | `;t + Tab` |
 | `;align` | = align<br><br>end | `—` | `;align + Tab` |
+| `;case` | = =cases<br>, <br>, <br>end | `—` | `;case + Tab` |
+| `;cases` | = =cases<br>, <br>, <br>end | `—` | `;cases + Tab` |
 | `;matrix` | = matrix<br><br>end | `—` | `;matrix + Tab` |
 
 ## Shortcut

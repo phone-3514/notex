@@ -25,6 +25,14 @@ function mathBlockSnippet(trigger: string, keyword: string): NoteSnippet {
   return { trigger, expansion: `${open}\n\nend`, cursorOffset: open.length + 1 };
 }
 
+// Inserts a piecewise "= <lhs>=cases\n<expr>, <cond>\n...\nend" block (see
+// renderer/markdown.ts) with two empty branches and the cursor on the
+// left-hand side — the part before "=cases" — ready to type e.g. "f(x)".
+function casesSnippet(trigger: string): NoteSnippet {
+  const expansion = "= =cases\n, \n, \nend";
+  return { trigger, expansion, cursorOffset: 2 };
+}
+
 // Inserts a ":::box <title>\n\n:::" custom-named block (see
 // renderer/noteBlocks.ts's "box" type) — unlike noteBlockSnippet's fixed
 // theorem/definition/etc. types, the cursor lands right after "box " so the
@@ -74,6 +82,8 @@ export const NOTE_SNIPPETS: NoteSnippet[] = [
   // inside a math span (an existing "@...@" or "= " line), not to start one.
   { trigger: ";t", expansion: "text()", cursorOffset: 5 },
   mathBlockSnippet(";align", "align"),
+  casesSnippet(";case"),
+  casesSnippet(";cases"),
   mathBlockSnippet(";matrix", "matrix"),
 ];
 
