@@ -1,3 +1,5 @@
+import { FIGURE_OPEN_RE } from "@/figure/figureText";
+
 // Theorem-style note blocks: ":::theorem 2.5 ... :::" fenced regions,
 // rendered as a bordered block with a Japanese title. The type->label
 // mapping is the single source used by both the renderer and the note
@@ -46,4 +48,38 @@ export function resolveNoteBlockTitle(type: string, titleSuffix: string | undefi
   const label = NOTE_BLOCK_LABELS[type];
   if (!label) return undefined;
   return titleSuffix ? `${label} ${titleSuffix}` : label;
+}
+
+// True for a line that opens a block the renderer recognises — a theorem-style
+// block with a known type (or a titled ":::box"), or a ":::fig" figure.
+export function isBlockOpenLine(line: string): boolean {
+  if (FIGURE_OPEN_RE.test(line)) return true;
+  const open = NOTE_BLOCK_OPEN_RE.exec(line);
+  return !!open && resolveNoteBlockTitle(open[1], open[2]?.trim()) !== undefined;
+}
+
+// Index of the ":::" line that closes the ":::math" region whose body starts at
+// `start` (or lines.length if it's never closed). Blocks may be nested inside
+// the region — ":::math / :::proposition 1 / ... / ::: / :::" — so each
+// recognised opener inside it swallows one closing ":::" before the region's own.
+export function findMathRegionEnd(lines: string[], start: number): number {
+  let depth = 0;
+  for (let i = start; i < lines.length; i++) {
+    if (lines[i].trim() === NOTE_BLOCK_CLOSE) {
+      if (depth === 0) return i;
+      depth--;
+    } else if (isBlockOpenLine(lines[i])) {
+      depth++;
+    }
+  }
+  return lines.length;
+}
+
+// True for any line that starts a block when seen at the top of a paragraph
+// scan — a recognised block opener or the ":::math" region opener. Paragraph
+// scanning stops *before* such a line (like it does for headings and lists),
+// so a block written directly after a text line, with no blank line between,
+// is still a block.
+export function startsBlock(line: string): boolean {
+  return isBlockOpenLine(line) || MATH_MODE_OPEN_RE.test(line);
 }

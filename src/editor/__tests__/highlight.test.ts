@@ -107,6 +107,16 @@ describe("highlightNote", () => {
     expect(spans.at(-1)).toEqual({ text: "\nx+1", cls: undefined });
   });
 
+  it("keeps math mode through a block nested in :::math, and leaves it at the region's own close", () => {
+    const spans = highlightNote(":::math\n:::proposition 2-4-1\nx+1\n:::\ny+2\n:::\nz+3");
+    const mathTexts = spans.filter((s) => s.cls === "hl-math").map((s) => s.text);
+    expect(mathTexts).toContain("x");
+    expect(mathTexts).toContain("y");
+    // After the region's own close, "z+3" is ordinary text again.
+    expect(spans.at(-1)).toEqual({ text: "\nz+3", cls: undefined });
+    expect(spans.filter((s) => s.cls === "hl-fence-type").map((s) => s.text)).toEqual(["math", "proposition"]);
+  });
+
   it("treats rows of '= align' / '= cases' blocks as formulas until 'end'", () => {
     const spans = highlightNote("= align\nf(x)\n= x^2\nend\nplain x");
     expect(clsOf(spans, "align")).toBe("hl-kw");

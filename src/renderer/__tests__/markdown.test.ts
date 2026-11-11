@@ -460,6 +460,75 @@ describe("renderMarkdownToHtml", () => {
     });
   });
 
+  describe("blocks nested inside :::math", () => {
+    const note = [
+      ":::math",
+      "E = F oplus F^perp",
+      ":::proposition 2-4-1",
+      "x^2 >= 0",
+      "= y = 1",
+      ":::",
+      "後ろの式 z",
+      ":::",
+      "外の文章 @w@",
+    ].join("\n");
+
+    it("renders a theorem-style block opened inside the region as a real block", () => {
+      const html = renderMarkdownToHtml(note);
+      expect(html).toContain("note-block-proposition");
+      expect(html).toContain("命題 2-4-1");
+      expect(html).not.toContain(":::");
+      expect(html).not.toContain("math-error");
+    });
+
+    it("keeps math mode inside the nested block, and after it, until the region's own close", () => {
+      const html = renderMarkdownToHtml(note);
+      // E=..., x^2>=0 (inside the block), z (after it): 3 inline formulas; "= y = 1" is one display equation.
+      expect(html.match(/class="katex"/g)?.length).toBeGreaterThanOrEqual(3);
+      expect(html.match(/class="math-display"/g)).toHaveLength(1);
+      // The block's body is inside the box.
+      const box = html.slice(html.indexOf("note-block-proposition"), html.indexOf("後ろの式"));
+      expect(box).toContain("katex");
+    });
+
+    it("ends math mode at the region's own ':::', so later text is ordinary prose", () => {
+      const html = renderMarkdownToHtml(note);
+      expect(html).toContain("外の文章");
+      // The trailing line is prose with one @…@ span, i.e. a paragraph, not a formula-only line.
+      expect(html).toContain('外の文章 <span class="katex-pdf-text"');
+    });
+
+    it("an empty nested block and a nested figure also work", () => {
+      const html = renderMarkdownToHtml(":::math\n:::definition 1\n:::\n:::fig 6x4\npoint 1,1\n:::\nx\n:::");
+      expect(html).toContain("note-block-definition");
+      expect(html).toContain("figure-block");
+      expect(html).not.toContain("math-error");
+      expect(html).not.toContain(":::");
+    });
+
+    it("an unknown ':::word' line is still just a formula line (doesn't swallow a closer)", () => {
+      const html = renderMarkdownToHtml(":::math\n:::foo\nx\n:::\n普通の文");
+      expect(html).toContain("普通の文");
+      expect(html).not.toContain("note-block");
+    });
+  });
+
+  describe("a block opened directly after a text line (no blank line between)", () => {
+    it("is still a block, in ordinary notes too", () => {
+      const html = renderMarkdownToHtml("前の文\n:::theorem 1\n中身\n:::");
+      expect(html).toContain("note-block-theorem");
+      expect(html).toContain("前の文");
+      expect(html).not.toContain(":::");
+    });
+
+    it("also for the ':::math' region and ':::fig'", () => {
+      const html = renderMarkdownToHtml("前の文\n:::math\nx\n:::\n文\n:::fig 4x3\n:::");
+      expect(html).toContain("katex");
+      expect(html).toContain("figure-block");
+      expect(html).not.toContain(":::");
+    });
+  });
+
   describe("a multi-line display block directly after a text line (no blank line between)", () => {
     it("is still read as a block, not a one-line equation", () => {
       const html = renderMarkdownToHtml("前の文\n= align\nf(x)\n= x^2\nend");

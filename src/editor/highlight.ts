@@ -6,7 +6,7 @@ import {
   FUNCTION_NAMES,
 } from "@/parser/dictionaries";
 import { FIGURE_OPEN_RE } from "@/figure/figureText";
-import { NOTE_BLOCK_OPEN_RE } from "@/renderer/noteBlocks";
+import { NOTE_BLOCK_OPEN_RE, MATH_MODE_OPEN_RE, resolveNoteBlockTitle } from "@/renderer/noteBlocks";
 import {
   DISPLAY_PREFIX_RE,
   CASES_OPEN_RE,
@@ -235,6 +235,10 @@ export function highlightNote(source: string): Span[] {
   let mode: Mode = "normal";
   let inBlock = false; // inside "= align|cases|matrix ... end"
   let blockReturn: Mode = "normal";
+  // Blocks can nest inside a ":::math" region (":::proposition … :::"): each
+  // opener there swallows one closing ":::" before the region's own.
+  let nestedDepth = 0;
+  let figureReturn: Mode = "normal"; // the mode a ":::fig" block returns to
 
   lines.forEach((line, index) => {
     highlightLine(line);
@@ -261,7 +265,15 @@ export function highlightNote(source: string): Span[] {
 
     if (trimmed === ":::") {
       push(out, line, "hl-fence");
-      mode = "normal";
+      if (mode === "fig") {
+        mode = figureReturn;
+        if (mode === "math") nestedDepth--;
+      } else if (mode === "math" && nestedDepth > 0) {
+        nestedDepth--;
+      } else {
+        mode = "normal";
+        nestedDepth = 0;
+      }
       return;
     }
 
@@ -275,18 +287,26 @@ export function highlightNote(source: string): Span[] {
       push(out, ":::", "hl-fence");
       push(out, "fig", "hl-fence-type");
       push(out, line.slice(6), "hl-num");
+      figureReturn = mode;
+      if (mode === "math") nestedDepth++;
       mode = "fig";
       return;
     }
 
     const open = NOTE_BLOCK_OPEN_RE.exec(line);
-    if (open) {
+    const isMathOpen = MATH_MODE_OPEN_RE.test(line);
+    if (open && (isMathOpen || resolveNoteBlockTitle(open[1], open[2]?.trim()) !== undefined)) {
       const type = open[1];
       push(out, ":::", "hl-fence");
       push(out, type, "hl-fence-type");
       const rest = line.slice(3 + type.length);
       highlightInline(out, rest, "hl-fence-title");
-      if (type === "math") mode = "math";
+      if (isMathOpen) {
+        mode = "math";
+        nestedDepth = 0;
+      } else if (mode === "math") {
+        nestedDepth++;
+      }
       return;
     }
 

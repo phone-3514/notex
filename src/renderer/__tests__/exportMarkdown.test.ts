@@ -87,6 +87,15 @@ describe("noteToMarkdown", () => {
     expect(md).toContain("前の文");
   });
 
+  it("exports a block nested inside ':::math' with its label, and ends the region at its own close", () => {
+    const md = noteToMarkdown(":::math\nx+1\n:::proposition 2-4-1\ny\n:::\n:::\n外の文章");
+    expect(md).toContain("**命題 2-4-1.**");
+    expect(md).toContain("$x+1$");
+    expect(md).toContain("$y$");
+    expect(md).toContain("外の文章");
+    expect(md).not.toContain(":::");
+  });
+
   it("flags an invalid inline expression without crashing or emitting fake LaTeX", () => {
     const md = noteToMarkdown("Bad @1/@ here.");
     expect(md).toContain("math error");

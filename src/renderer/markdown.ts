@@ -4,7 +4,15 @@ import { parseMath } from "@/parser/parseMath";
 import type { MathNode } from "@/parser/ast";
 import { FIGURE_OPEN_RE, FIGURE_CLOSE, parseFigure } from "@/figure/figureText";
 import { renderFigureHtml } from "@/figure/renderFigure";
-import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE, MATH_MODE_OPEN_RE } from "./noteBlocks";
+import {
+  resolveNoteBlockTitle,
+  NOTE_BLOCK_OPEN_RE,
+  NOTE_BLOCK_CLOSE,
+  MATH_MODE_OPEN_RE,
+  isBlockOpenLine,
+  startsBlock,
+  findMathRegionEnd,
+} from "./noteBlocks";
 
 // Explicit math boundaries only — nothing here ever guesses that a line of
 // plain text is "probably math". A line becomes math only via:
@@ -451,7 +459,13 @@ export function isMultilineBlockOpen(line: string): boolean {
 export function mathModeBodyLines(lines: string[]): string[] {
   const out: string[] = [];
   let inBlock = false;
+  let inFigure = false; // inside a nested ":::fig", whose lines are shapes, not formulas
   for (const line of lines) {
+    if (inFigure) {
+      out.push(line);
+      if (line.trim() === NOTE_BLOCK_CLOSE) inFigure = false;
+      continue;
+    }
     if (inBlock) {
       out.push(line);
       if (line.trim() === "end") inBlock = false;
@@ -459,6 +473,19 @@ export function mathModeBodyLines(lines: string[]): string[] {
     }
     if (line.trim() === "") {
       out.push(line);
+      continue;
+    }
+    // Blocks nested in the region (":::proposition 2-1 ... :::") keep their
+    // fences as-is — the renderer's block handling picks them up from the
+    // transformed lines — and their bodies stay in math mode. (The region's
+    // own closing ":::" is never part of the body.)
+    if (line.trim() === NOTE_BLOCK_CLOSE) {
+      out.push(line);
+      continue;
+    }
+    if (isBlockOpenLine(line)) {
+      out.push(line);
+      if (FIGURE_OPEN_RE.test(line)) inFigure = true;
       continue;
     }
     const display = DISPLAY_PREFIX_RE.exec(line);
@@ -514,11 +541,9 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
     if (MATH_MODE_OPEN_RE.test(line)) {
       i++;
       const bodyStart = i;
-      while (i < lines.length && lines[i].trim() !== NOTE_BLOCK_CLOSE) {
-        i++;
-      }
-      const bodyLines = lines.slice(bodyStart, i);
-      if (i < lines.length) i++;
+      const end = findMathRegionEnd(lines, bodyStart);
+      const bodyLines = lines.slice(bodyStart, end);
+      i = end < lines.length ? end + 1 : end;
       out.push(renderMarkdownBlocks(mathModeBodyLines(bodyLines).join("\n"), baseLine + bodyStart));
       continue;
     }
@@ -646,7 +671,7 @@ function renderMarkdownBlocks(chunk: string, baseLine: number): string {
       !HEADING_RE.test(lines[i]) &&
       !UNORDERED_RE.test(lines[i]) &&
       !ORDERED_RE.test(lines[i]) &&
-      !(i > paragraphStart && isMultilineBlockOpen(lines[i]))
+      !(i > paragraphStart && (isMultilineBlockOpen(lines[i]) || startsBlock(lines[i])))
     ) {
       const currentLine = lines[i];
       const display = DISPLAY_PREFIX_RE.exec(currentLine);

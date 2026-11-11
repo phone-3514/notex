@@ -38,7 +38,7 @@ import {
   isMultilineBlockOpen,
 } from "./markdown";
 import { FIGURE_OPEN_RE, FIGURE_CLOSE } from "@/figure/figureText";
-import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE, MATH_MODE_OPEN_RE } from "./noteBlocks";
+import { resolveNoteBlockTitle, NOTE_BLOCK_OPEN_RE, NOTE_BLOCK_CLOSE, MATH_MODE_OPEN_RE, findMathRegionEnd, startsBlock } from "./noteBlocks";
 
 function inlineMath(latex: string): string {
   return `$${latex}$`;
@@ -178,11 +178,9 @@ function exportMarkdownBlocks(chunk: string): string {
     if (MATH_MODE_OPEN_RE.test(line)) {
       i++;
       const bodyStart = i;
-      while (i < lines.length && lines[i].trim() !== NOTE_BLOCK_CLOSE) {
-        i++;
-      }
-      const bodyLines = lines.slice(bodyStart, i);
-      if (i < lines.length) i++;
+      const end = findMathRegionEnd(lines, bodyStart);
+      const bodyLines = lines.slice(bodyStart, end);
+      i = end < lines.length ? end + 1 : end;
       out.push(exportMarkdownBlocks(mathModeBodyLines(bodyLines).join("\n")));
       continue;
     }
@@ -303,7 +301,7 @@ function exportMarkdownBlocks(chunk: string): string {
       !HEADING_RE.test(lines[i]) &&
       !UNORDERED_RE.test(lines[i]) &&
       !ORDERED_RE.test(lines[i]) &&
-      !(i > paragraphStart && isMultilineBlockOpen(lines[i]))
+      !(i > paragraphStart && (isMultilineBlockOpen(lines[i]) || startsBlock(lines[i])))
     ) {
       const currentLine = lines[i];
       const display = DISPLAY_PREFIX_RE.exec(currentLine);
