@@ -51,18 +51,39 @@ const SPACED_OPERATORS = new Set([
   "\\mid",
 ]);
 
+// Marker for "a visible gap belongs here" between two juxtaposed factors (see
+// the parser's juxtaposition gap). It becomes a real "\ " in joinTight unless
+// the neighbouring part already brings its own spacing.
+const GAP = "\u0000gap";
+
 function joinTight(parts: string[]): string {
   let out = "";
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
+    if (part === GAP) {
+      const before = parts[i - 1];
+      const after = parts[i + 1];
+      const selfSpaced =
+        !out ||
+        !after ||
+        SPACED_OPERATORS.has(before) ||
+        SPACED_OPERATORS.has(after) ||
+        isTextCommand(before) ||
+        isTextCommand(after) ||
+        after.startsWith("\\,"); // a differential brings its own thin space
+      if (!selfSpaced) out += "\\ ";
+      continue;
+    }
+    // The part before this one, looking through a gap marker.
+    const previous = parts[i - 1] === GAP ? parts[i - 2] : parts[i - 1];
     // An Empty operand (missing side of a relation) contributes nothing —
     // and no separator, so "= 9" doesn't start with a dangling "\ ".
     if (part === "") continue;
     if (out) {
       if (
-        SPACED_OPERATORS.has(parts[i - 1]) ||
+        SPACED_OPERATORS.has(previous) ||
         SPACED_OPERATORS.has(part) ||
-        isTextCommand(parts[i - 1]) ||
+        isTextCommand(previous) ||
         isTextCommand(part)
       ) {
         out += "\\ ";
@@ -96,8 +117,14 @@ export function nodeToLatex(node: MathNode): string {
       return node.value;
     case "Sym":
       return node.name;
-    case "Row":
-      return joinTight(node.items.map(nodeToLatex));
+    case "Row": {
+      const parts: string[] = [];
+      node.items.forEach((item, i) => {
+        if (node.gaps?.[i]) parts.push(GAP);
+        parts.push(nodeToLatex(item));
+      });
+      return joinTight(parts);
+    }
     case "Frac":
       return `\\frac${braces(nodeToLatex(node.num))}${braces(nodeToLatex(node.den))}`;
     case "Pow":

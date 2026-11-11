@@ -247,6 +247,10 @@ export const WORD_KEYWORDS: Record<string, string> = {
   models: "\\models",
   Vdash: "\\Vdash",
 
+  // Explicit horizontal spaces, for gaps the automatic rule doesn't cover.
+  quad: "\\quad",
+  qquad: "\\qquad",
+
   // Arrows beyond the existing "to"/"mapsto"/"gets".
   hookrightarrow: "\\hookrightarrow",
   twoheadrightarrow: "\\twoheadrightarrow",

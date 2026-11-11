@@ -13,6 +13,10 @@ export interface Token {
   type: TokenType;
   value: string;
   pos: number;
+  // Set (only when true) if whitespace came right before this token in the
+  // source. Whitespace is otherwise insignificant to the grammar; the parser
+  // consults this in one place — see parseMath.ts's juxtaposition gap.
+  spaceBefore?: true;
 }
 
 export class MathSyntaxError extends Error {

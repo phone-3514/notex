@@ -576,6 +576,58 @@ describe("shorthandToLatex — vectors", () => {
     });
   });
 
+  describe("a space after a closing bracket becomes a visible gap", () => {
+    it("F cap G = {bf(0)} (because …): the space between } and ( is kept", () => {
+      expect(shorthandToLatex("{bf(0)} (because")).toBe("\\{\\boldsymbol{0}\\}\\ (\\because");
+      expect(shorthandToLatex("F cap G = {bf(0)} (because")).toBe("F\\cap G\\ =\\ \\{\\boldsymbol{0}\\}\\ (\\because");
+    });
+
+    it("without the space, the groups still butt together", () => {
+      expect(shorthandToLatex("{bf(0)}(because")).toBe("\\{\\boldsymbol{0}\\}(\\because");
+      expect(shorthandToLatex("(x+1)(x-1)")).toBe("(x+1)(x-1)");
+    });
+
+    it("applies after ) ] } before a bracket, a number or an ordinary name", () => {
+      expect(shorthandToLatex("(x+1) (x-1)")).toBe("(x+1)\\ (x-1)");
+      expect(shorthandToLatex("[a] [b]")).toBe("[a]\\ [b]");
+      expect(shorthandToLatex("f(x) g(x)")).toBe("f(x)\\ g(x)");
+      expect(shorthandToLatex("(a) 2")).toBe("(a)\\ 2");
+      expect(shorthandToLatex("(a) alpha")).toBe("(a)\\ \\alpha");
+      expect(shorthandToLatex("(a) (b) (c)")).toBe("(a)\\ (b)\\ (c)");
+    });
+
+    it("does not change anything where the space isn't after a closing bracket", () => {
+      expect(shorthandToLatex("sin x")).toBe("\\sin x");
+      expect(shorthandToLatex("sin (x)")).toBe("\\sin(x)");
+      expect(shorthandToLatex("a b")).toBe("ab");
+      expect(shorthandToLatex("2 x")).toBe("2x");
+      expect(shorthandToLatex("x (y)")).toBe("x(y)");
+    });
+
+    it("leaves operators, relations, differentials and text to their own spacing (no doubled gap)", () => {
+      expect(shorthandToLatex("(A) cup (B)")).toBe("(A)\\cup(B)");
+      expect(shorthandToLatex("(A) in B")).toBe("(A)\\ \\in\\ B");
+      expect(shorthandToLatex("ln(x) dx")).toBe("\\ln(x)\\,dx");
+      expect(shorthandToLatex("int 0~1 (x) dx")).toBe("\\int_{0}^{1}(x)\\,dx");
+      expect(shorthandToLatex("(a) text(w)")).toBe("(a)\\ \\text{w}");
+      expect(shorthandToLatex("{a} : b")).toBe("\\{a\\}:b");
+    });
+
+    it("renders as valid KaTeX", () => {
+      for (const src of ["{bf(0)} (because", "(x+1) (x-1)", "[a] [b]", "(a) 2", "(a) quad (b)"]) {
+        expect(() => katex.renderToString(shorthandToLatex(src), { throwOnError: true }), src).not.toThrow();
+      }
+    });
+  });
+
+  describe("quad / qquad: explicit horizontal space", () => {
+    it("map to \\quad and \\qquad", () => {
+      expect(shorthandToLatex("x quad y")).toBe("x\\quad y");
+      expect(shorthandToLatex("(a) quad (b)")).toBe("(a)\\quad(b)");
+      expect(shorthandToLatex("x qquad y")).toBe("x\\qquad y");
+    });
+  });
+
   describe("probability / complex-analysis function names: Var, Cov, Pr, Re, Im", () => {
     it("render upright, like sin/log", () => {
       expect(shorthandToLatex("Var(X)")).toBe("\\operatorname{Var}(X)");
