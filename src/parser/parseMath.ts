@@ -318,6 +318,18 @@ class Parser {
   private parseMatrix(): MathNode {
     const open = this.next(); // "(" or "["
     const rows: MathNode[][] = [[]];
+    // A comma is a hard column separator, so "[1, , 3]" has an empty middle
+    // cell: `segmentCells` counts the cells since the last separator, and a
+    // comma (or the end of a row that used commas) with none in front of it
+    // closes an empty cell. Rows without commas are unaffected.
+    let segmentCells = 0;
+    let rowHasComma = false;
+    const endRow = () => {
+      if (rowHasComma && segmentCells === 0) rows[rows.length - 1].push({ kind: "Empty" });
+      rows.push([]);
+      segmentCells = 0;
+      rowHasComma = false;
+    };
     const previous = this.splitSpaces;
     this.splitSpaces = true;
     try {
@@ -328,18 +340,23 @@ class Parser {
         }
         if (this.isSymbol("]") || this.isSymbol(")")) {
           this.next();
+          if (rowHasComma && segmentCells === 0) rows[rows.length - 1].push({ kind: "Empty" });
           break;
         }
         if (this.isSymbol(";")) {
           this.next();
-          rows.push([]);
+          endRow();
           continue;
         }
         if (this.isSymbol(",")) {
           this.next();
+          if (segmentCells === 0) rows[rows.length - 1].push({ kind: "Empty" });
+          rowHasComma = true;
+          segmentCells = 0;
           continue;
         }
         rows[rows.length - 1].push(this.parseAdd());
+        segmentCells++;
       }
     } finally {
       this.splitSpaces = previous;

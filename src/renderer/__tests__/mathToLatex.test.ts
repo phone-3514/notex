@@ -671,6 +671,24 @@ describe("shorthandToLatex — vectors", () => {
       expect(shorthandToLatex("[1 ... 1; 3 4 5]")).toBe("\\begin{bmatrix}1 & \\cdots & 1\\\\3 & 4 & 5\\end{bmatrix}");
     });
 
+    it("commas are hard separators: empty cells between, before and after them", () => {
+      expect(shorthandToLatex("P1 = [1, , , ; ,ddots, , ; , , 1, ; , , ,0]")).toBe(
+        "P_{1}\\ =\\ \\begin{bmatrix}1 &  &  & \\\\ & \\ddots &  & \\\\ &  & 1 & \\\\ &  &  & 0\\end{bmatrix}"
+      );
+      expect(shorthandToLatex("[1, , 3; 4, 5, 6]")).toBe("\\begin{bmatrix}1 &  & 3\\\\4 & 5 & 6\\end{bmatrix}");
+      expect(shorthandToLatex("[1,,3; 4,5,6]")).toBe("\\begin{bmatrix}1 &  & 3\\\\4 & 5 & 6\\end{bmatrix}");
+      expect(shorthandToLatex("[, 1; 2, ]")).toBe("\\begin{bmatrix} & 1\\\\2 & \\end{bmatrix}");
+    });
+
+    it("an empty-cell row still has to match the others' width", () => {
+      expect(() => shorthandToLatex("[1, , 3; 4, 5]")).toThrow(MathSyntaxError);
+    });
+
+    it("rows without empty slots behave as before, comma-separated or not", () => {
+      expect(shorthandToLatex("[1, 2, 3;]")).toBe("\\begin{bmatrix}1 & 2 & 3\\end{bmatrix}");
+      expect(shorthandToLatex("[1 2, 3; 4 5 6]")).toBe("\\begin{bmatrix}1 & 2 & 3\\\\4 & 5 & 6\\end{bmatrix}");
+    });
+
     it("a space inside a nested bracket is still just a space", () => {
       expect(shorthandToLatex("[(1 2) 3; 4 5]")).toBe("\\begin{bmatrix}(12) & 3\\\\4 & 5\\end{bmatrix}");
     });
