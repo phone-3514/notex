@@ -12,7 +12,14 @@ import {
 } from "react";
 import { matchMathSnippets, isNoteSnippetContext, type MathSnippet } from "@/editor/mathSnippets";
 import { matchNoteSnippet } from "@/editor/noteSnippets";
-import { wrapBold, insertHeading, type TextState } from "@/editor/shortcuts";
+import {
+  wrapBold,
+  insertHeading,
+  indentSelection,
+  outdentSelection,
+  type IndentEdit,
+  type TextState,
+} from "@/editor/shortcuts";
 import { isComposingInput } from "@/editor/composition";
 import { getCaretCoordinates } from "@/editor/caretCoordinates";
 import { lineNumberAt } from "@/editor/cursorLine";
@@ -137,6 +144,29 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
     [commit, menu]
   );
 
+  // Applies an indent/outdent as one undoable edit: the replaced range is
+  // selected and overwritten via the browser's own insertText command, so
+  // Cmd+Z undoes it in a single step (assigning el.value would wipe the undo
+  // history). Falls back to a plain commit where that command isn't available.
+  const applyIndentEdit = useCallback(
+    (el: HTMLTextAreaElement, edit: IndentEdit) => {
+      el.setSelectionRange(edit.from, edit.to);
+      let applied = false;
+      try {
+        applied = document.execCommand("insertText", false, edit.text);
+      } catch {
+        applied = false;
+      }
+      if (applied && el.value === edit.value) {
+        el.setSelectionRange(edit.selectionStart, edit.selectionEnd);
+        onCursorLineChange?.(lineNumberAt(el.value, edit.selectionStart));
+      } else {
+        commit(edit);
+      }
+    },
+    [commit, onCursorLineChange]
+  );
+
   // Returns true if a note snippet was expanded (caller should preventDefault).
   const tryExpandNoteSnippet = useCallback(
     (el: HTMLTextAreaElement): boolean => {
@@ -191,6 +221,16 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
         return;
       }
 
+      // Otherwise Tab indents (Shift+Tab outdents) rather than moving focus
+      // out of the editor. Cmd/Ctrl/Alt+Tab belong to the OS/browser.
+      if (e.key === "Tab" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setMenu(null);
+        const state = { value: el.value, selectionStart: el.selectionStart, selectionEnd: el.selectionEnd };
+        applyIndentEdit(el, e.shiftKey ? outdentSelection(state) : indentSelection(state));
+        return;
+      }
+
       if (e.metaKey && !e.shiftKey && (e.key === "b" || e.key === "B")) {
         e.preventDefault();
         setMenu(null);
@@ -205,7 +245,7 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
         return;
       }
     },
-    [menu, applySnippet, tryExpandNoteSnippet, commit]
+    [menu, applySnippet, tryExpandNoteSnippet, applyIndentEdit, commit]
   );
 
   const handleChange = useCallback(

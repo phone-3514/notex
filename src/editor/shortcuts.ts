@@ -45,3 +45,114 @@ export function insertHeading(level: 1 | 2 | 3) {
     };
   };
 }
+
+// ---- Tab / Shift+Tab indentation -------------------------------------------
+//
+// Like a code editor (or Word): Tab indents instead of moving focus out of the
+// textarea. With a selection it indents every line the selection touches; with
+// just a caret it inserts one indent unit at the caret. Shift+Tab removes one
+// unit from the start of each touched line (or the caret's line).
+
+export const INDENT_UNIT = "    ";
+
+// A transform's result: the new text state, plus the single contiguous range of
+// the *original* value that was replaced (`from`..`to` -> `text`), so the
+// caller can apply it as one undoable edit instead of replacing the document.
+export interface IndentEdit extends TextState {
+  from: number;
+  to: number;
+  text: string;
+}
+
+// The lines a selection touches, as [from, to) in `value`: from the start of
+// the first line to the end of the last. A selection that ends exactly at the
+// start of a line doesn't include that line (the usual editor convention).
+function touchedLines(value: string, start: number, end: number): { from: number; to: number } {
+  const from = startOfLine(value, start);
+  const last = end > start && value[end - 1] === "\n" ? end - 1 : end;
+  const nl = value.indexOf("\n", last);
+  return { from, to: nl === -1 ? value.length : nl };
+}
+
+export function indentSelection(state: TextState, unit = INDENT_UNIT): IndentEdit {
+  const { value, selectionStart: start, selectionEnd: end } = state;
+  if (start === end) {
+    return {
+      value: value.slice(0, start) + unit + value.slice(end),
+      selectionStart: start + unit.length,
+      selectionEnd: start + unit.length,
+      from: start,
+      to: start,
+      text: unit,
+    };
+  }
+  const { from, to } = touchedLines(value, start, end);
+  const lines = value.slice(from, to).split("\n");
+  let indented = 0;
+  const text = lines
+    .map((line) => {
+      if (line === "") return line; // leave blank lines blank
+      indented++;
+      return unit + line;
+    })
+    .join("\n");
+  const firstShift = lines[0] === "" ? 0 : unit.length;
+  return {
+    value: value.slice(0, from) + text + value.slice(to),
+    selectionStart: start + firstShift,
+    selectionEnd: end + indented * unit.length,
+    from,
+    to,
+    text,
+  };
+}
+
+// How much leading whitespace outdenting removes from `line`: one tab, or up to
+// one indent unit of spaces.
+function outdentAmount(line: string, unit: string): number {
+  if (line.startsWith("\t")) return 1;
+  let n = 0;
+  while (n < unit.length && line[n] === " ") n++;
+  return n;
+}
+
+export function outdentSelection(state: TextState, unit = INDENT_UNIT): IndentEdit {
+  const { value, selectionStart: start, selectionEnd: end } = state;
+  const { from, to } = touchedLines(value, start, end);
+  const lines = value.slice(from, to).split("\n");
+  const removed = lines.map((line) => outdentAmount(line, unit));
+  const text = lines.map((line, i) => line.slice(removed[i])).join("\n");
+
+  // Where an original position lands once the leading whitespace is gone:
+  // shifted left by everything removed on earlier lines, plus however much of
+  // its own line's removed run lies before it (never past the line start).
+  const lineStarts: number[] = [];
+  let offset = from;
+  for (const line of lines) {
+    lineStarts.push(offset);
+    offset += line.length + 1;
+  }
+  const mapPos = (pos: number): number => {
+    if (pos < from) return pos;
+    if (pos > to) return pos - removed.reduce((a, b) => a + b, 0);
+    let shift = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const isLast = i === lines.length - 1 || pos < lineStarts[i + 1];
+      if (isLast) {
+        shift += Math.min(removed[i], pos - lineStarts[i]);
+        break;
+      }
+      shift += removed[i];
+    }
+    return pos - shift;
+  };
+
+  return {
+    value: value.slice(0, from) + text + value.slice(to),
+    selectionStart: mapPos(start),
+    selectionEnd: mapPos(end),
+    from,
+    to,
+    text,
+  };
+}
