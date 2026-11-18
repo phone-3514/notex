@@ -11,6 +11,24 @@ import {
   RELATION_SYMBOLS,
 } from "./dictionaries";
 
+// Symbol words that are operands (constants/dots), unlike the operator and
+// relation words ("in", "cup", "to", …) that share WORD_KEYWORDS with them.
+const OPERAND_LIKE_WORDS = new Set([
+  "oo",
+  "infty",
+  "emptyset",
+  "varnothing",
+  "partial",
+  "nabla",
+  "aleph",
+  "top",
+  "bot",
+  "dots",
+  "cdots",
+  "vdots",
+  "ddots",
+]);
+
 const FUNCTION_NAME_SET = new Set<string>(FUNCTION_NAMES);
 
 // Escapes LaTeX-special characters inside a "text(...)" span's raw content
@@ -271,9 +289,8 @@ class Parser {
       this.absDepth = absDepth;
     };
     try {
-      const group = this.parseAngleGroup();
-      const after = this.peek();
-      if (this.startsFactor(after) || (after.type === "RELOP" && after.value === "<")) {
+      const group = this.parsePostfix(this.parseAngleGroup());
+      if (this.operandFollows(this.peek())) {
         restore();
         return null;
       }
@@ -283,6 +300,16 @@ class Parser {
       restore();
       return null;
     }
+  }
+
+  // Does `t` start another operand (so "x<y, z>w" is an inequality chain, not
+  // an angle group followed by something)? Operator/relation words — "in",
+  // "cup", "subset", "to", … — don't: "span<a,b> in V" is still a span.
+  private operandFollows(t: Token): boolean {
+    if (t.type === "RELOP" && t.value === "<") return true;
+    if (!this.startsFactor(t)) return false;
+    if (t.type === "IDENT" && t.value in WORD_KEYWORDS && !OPERAND_LIKE_WORDS.has(t.value)) return false;
+    return true;
   }
 
   // Deliberately does NOT recognize a bare "<" (RELOP) as starting a
@@ -302,7 +329,12 @@ class Parser {
   }
 
   private parseFactor(): MathNode {
-    let atom = this.parseAtom();
+    return this.parsePostfix(this.parseAtom());
+  }
+
+  // Postfix operators on an atom: "^" exponents, "_" subscripts, "'" primes.
+  private parsePostfix(base: MathNode): MathNode {
+    let atom = base;
     while (true) {
       if (this.isSymbol("^")) {
         this.next();

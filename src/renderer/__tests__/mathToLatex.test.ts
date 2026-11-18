@@ -645,6 +645,26 @@ describe("shorthandToLatex — vectors", () => {
       expect(shorthandToLatex("quad <a,b>")).toBe("\\quad\\langle a,b\\rangle");
     });
 
+    it("stays an angle group when an operator/relation word follows: span<a_1,…,a_k> in V", () => {
+      expect(shorthandToLatex("<bf(a)_1,dots,bf(a)_k>")).toBe("\\langle\\boldsymbol{a}_{1},\\dots,\\boldsymbol{a}_{k}\\rangle");
+      expect(shorthandToLatex("W = span <a,b> in V")).toBe("W\\ =\\ span\\langle a,b\\rangle\\ \\in\\ V");
+      expect(shorthandToLatex("(1)quad <a,b> subset V")).toBe("(1)\\quad\\langle a,b\\rangle\\subset V");
+      expect(shorthandToLatex("2<a,b> cup c")).toBe("2\\langle a,b\\rangle\\cup c");
+      expect(shorthandToLatex("<a,b> to c")).toBe("\\langle a,b\\rangle\\to c");
+    });
+
+    it("takes ^ _ ' after the group, also when it follows another factor", () => {
+      expect(shorthandToLatex("span <a,b>^perp")).toBe("span\\langle a,b\\rangle^{\\perp}");
+      expect(shorthandToLatex("2<a,b>^2 + c")).toBe("2\\langle a,b\\rangle^{2}+c");
+      expect(shorthandToLatex("x <a,b>_n")).toBe("x\\langle a,b\\rangle_{n}");
+    });
+
+    it("a following operand (name, number, constant) still makes it an inequality chain", () => {
+      expect(shorthandToLatex("a<b>c")).toBe("a\\ <\\ b\\ >\\ c");
+      expect(shorthandToLatex("x<y>2")).toBe("x\\ <\\ y\\ >\\ 2");
+      expect(shorthandToLatex("x < y > oo")).toBe("x\\ <\\ y\\ >\\ \\infty");
+    });
+
     it("two groups side by side multiply", () => {
       expect(shorthandToLatex("<a,b> <c,d>")).toBe("\\langle a,b\\rangle\\langle c,d\\rangle");
     });
