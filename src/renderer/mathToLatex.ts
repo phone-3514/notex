@@ -152,6 +152,14 @@ export function nodeToLatex(node: MathNode): string {
     }
     case "Empty":
       return "";
+    case "Matrix": {
+      const env = node.round ? "pmatrix" : "bmatrix";
+      // A bare "..." cell is the horizontal omission "\cdots" in a matrix
+      // (it's "\ldots" everywhere else), as in the "= matrix" block.
+      const cell = (n: MathNode) => (n.kind === "Sym" && n.name === "\\ldots" ? "\\cdots" : nodeToLatex(n));
+      const body = node.rows.map((row) => row.map(cell).join(" & ")).join("\\\\");
+      return `\\begin{${env}}${body}\\end{${env}}`;
+    }
     case "Group":
       return `${node.open ?? "("}${nodeToLatex(node.inner)}${node.unclosed ? "" : (node.close ?? ")")}`;
     case "ArgList":

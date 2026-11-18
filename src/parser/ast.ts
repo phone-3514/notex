@@ -46,4 +46,10 @@ export type MathNode =
   | { kind: "SetLiteral"; items: MathNode[] } // {a,b,c} / {} — a finite/literal set
   | { kind: "SetBuilder"; variable: MathNode; condition: MathNode } // {x | cond} / {x : cond}
   | { kind: "AngleGroup"; items: MathNode[] } // <a,b,c> — inner product / basis-span / generator notation
+  // MATLAB-style matrix literal "[1 2; 3 4]" (square brackets -> bmatrix) or
+  // "(1 2; 3 4)" (round -> pmatrix): rows split by ";", columns by space or ",".
+  | { kind: "Matrix"; rows: MathNode[][]; round?: boolean }
+  // MATLAB-style matrix literal "[1 2; 3 4]" (square brackets -> bmatrix) or
+  // "(1 2; 3 4)" (round -> pmatrix): rows split by ";", columns by space or ",".
+  | { kind: "Matrix"; rows: MathNode[][]; round?: boolean }
   | { kind: "Sequence"; items: MathNode[] }; // comma-separated clauses, e.g. quantifier chains

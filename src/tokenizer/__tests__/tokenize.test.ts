@@ -32,6 +32,19 @@ describe("tokenize", () => {
     expect(tokens[0]).toMatchObject({ type: "NUMBER", value: "3.14" });
   });
 
+  it("tokenizes ';' and records which tokens had whitespace right before them", () => {
+    const tokens = tokenize("[1 2;3]");
+    expect(tokens.map((t) => [t.value, t.spaceBefore === true])).toEqual([
+      ["[", false],
+      ["1", false],
+      ["2", true],
+      [";", false],
+      ["3", false],
+      ["]", false],
+      ["", false],
+    ]);
+  });
+
   it("throws MathSyntaxError on unsupported characters", () => {
     expect(() => tokenize("x@y")).toThrow(MathSyntaxError);
   });

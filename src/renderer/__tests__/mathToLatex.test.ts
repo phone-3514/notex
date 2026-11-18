@@ -633,6 +633,74 @@ describe("shorthandToLatex — vectors", () => {
     });
   });
 
+  describe("MATLAB-style matrices: [1 2 3; 4 5 6]", () => {
+    it("';' separates rows; space or ',' separates columns; square brackets -> bmatrix", () => {
+      expect(shorthandToLatex("[1 2 3; 4 5 6]")).toBe("\\begin{bmatrix}1 & 2 & 3\\\\4 & 5 & 6\\end{bmatrix}");
+      expect(shorthandToLatex("[1, 2; 3, 4]")).toBe("\\begin{bmatrix}1 & 2\\\\3 & 4\\end{bmatrix}");
+      expect(shorthandToLatex("A = [a b; c d]")).toBe("A\\ =\\ \\begin{bmatrix}a & b\\\\c & d\\end{bmatrix}");
+    });
+
+    it("round brackets give a pmatrix", () => {
+      expect(shorthandToLatex("(1 2; 3 4)")).toBe("\\begin{pmatrix}1 & 2\\\\3 & 4\\end{pmatrix}");
+    });
+
+    it("column vectors and a trailing ';' (a one-row matrix)", () => {
+      expect(shorthandToLatex("[1; 2; 3]")).toBe("\\begin{bmatrix}1\\\\2\\\\3\\end{bmatrix}");
+      expect(shorthandToLatex("[1 2 3;]")).toBe("\\begin{bmatrix}1 & 2 & 3\\end{bmatrix}");
+    });
+
+    it("follows MATLAB's whitespace rule for signs and operators", () => {
+      expect(shorthandToLatex("[1 -2; 3 4]")).toBe("\\begin{bmatrix}1 & -2\\\\3 & 4\\end{bmatrix}"); // two elements
+      expect(shorthandToLatex("[a + b c; d e]")).toBe("\\begin{bmatrix}a+b & c\\\\d & e\\end{bmatrix}"); // a + b is one
+      expect(shorthandToLatex("[a+b c; d e]")).toBe("\\begin{bmatrix}a+b & c\\\\d & e\\end{bmatrix}");
+      expect(() => shorthandToLatex("[1 - 2; 3 4]")).toThrow(MathSyntaxError); // 1 - 2 is a single element -> ragged
+    });
+
+    it("cells can be subscripts, fractions, calls, functions, vectors", () => {
+      expect(shorthandToLatex("[x_1 x_2; y_1 y_2]")).toBe("\\begin{bmatrix}x_{1} & x_{2}\\\\y_{1} & y_{2}\\end{bmatrix}");
+      expect(shorthandToLatex("[1/2 3/4; 5 6]")).toBe("\\begin{bmatrix}\\frac{1}{2} & \\frac{3}{4}\\\\5 & 6\\end{bmatrix}");
+      expect(shorthandToLatex("[f(x) g(x); 1 2]")).toBe("\\begin{bmatrix}f(x) & g(x)\\\\1 & 2\\end{bmatrix}");
+      expect(shorthandToLatex("[sin x cos x; 1 2]")).toBe("\\begin{bmatrix}\\sin x & \\cos x\\\\1 & 2\\end{bmatrix}");
+      expect(shorthandToLatex("[bf(a) bf(b); 1 2]")).toBe("\\begin{bmatrix}\\boldsymbol{a} & \\boldsymbol{b}\\\\1 & 2\\end{bmatrix}");
+    });
+
+    it("omission symbols: dots/vdots/ddots and a bare '...' (-> \\cdots)", () => {
+      expect(shorthandToLatex("[1 dots 1; vdots ddots vdots; 1 dots 1]")).toBe(
+        "\\begin{bmatrix}1 & \\dots & 1\\\\\\vdots & \\ddots & \\vdots\\\\1 & \\dots & 1\\end{bmatrix}"
+      );
+      expect(shorthandToLatex("[1 ... 1; 3 4 5]")).toBe("\\begin{bmatrix}1 & \\cdots & 1\\\\3 & 4 & 5\\end{bmatrix}");
+    });
+
+    it("a space inside a nested bracket is still just a space", () => {
+      expect(shorthandToLatex("[(1 2) 3; 4 5]")).toBe("\\begin{bmatrix}(12) & 3\\\\4 & 5\\end{bmatrix}");
+    });
+
+    it("takes postfix operators and multiplies with its neighbours", () => {
+      expect(shorthandToLatex("[1 2; 3 4]^T")).toBe("\\begin{bmatrix}1 & 2\\\\3 & 4\\end{bmatrix}^{T}");
+      expect(shorthandToLatex("[1 2; 3 4]^(-1)")).toBe("\\begin{bmatrix}1 & 2\\\\3 & 4\\end{bmatrix}^{-1}");
+      expect(shorthandToLatex("[x y; z w] [u; v]")).toBe(
+        "\\begin{bmatrix}x & y\\\\z & w\\end{bmatrix}\\begin{bmatrix}u\\\\v\\end{bmatrix}"
+      );
+    });
+
+    it("rejects ragged rows and an unclosed matrix", () => {
+      expect(() => shorthandToLatex("[1 2; 3]")).toThrow(MathSyntaxError);
+      expect(() => shorthandToLatex("[1 2; 3 4")).toThrow(MathSyntaxError);
+    });
+
+    it("leaves ordinary brackets alone when there is no ';'", () => {
+      expect(shorthandToLatex("[E(X)]^2")).toBe("[E(X)]^{2}");
+      expect(shorthandToLatex("[a,b]")).toBe("[a,b]");
+      expect(shorthandToLatex("[0,1)")).toBe("[0,1)");
+    });
+
+    it("renders as valid KaTeX", () => {
+      for (const src of ["[1 2 3; 4 5 6]", "(1 2; 3 4)", "[1; 2; 3]", "[1 dots 1; vdots ddots vdots; 1 dots 1]", "A = [a b; c d]^T"]) {
+        expect(() => katex.renderToString(shorthandToLatex(src), { throwOnError: true }), src).not.toThrow();
+      }
+    });
+  });
+
   describe("an angle group right after a factor (coefficient, quad, …) vs. 'less than'", () => {
     it("2<a,b> is a coefficient times an inner product, not '2 < a, b >'", () => {
       expect(shorthandToLatex("2<a,b>")).toBe("2\\langle a,b\\rangle");

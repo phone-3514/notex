@@ -27,6 +27,7 @@ const OPERAND_LIKE_WORDS = new Set([
   "cdots",
   "vdots",
   "ddots",
+  "...",
 ]);
 
 const FUNCTION_NAME_SET = new Set<string>(FUNCTION_NAMES);
@@ -66,6 +67,11 @@ class Parser {
   // inequality). Only suppresses the single-char ">" specifically — ">="
   // is a distinct token and never ambiguous with the closing bracket.
   private angleDepth = 0;
+
+  // True while parsing the cells of a MATLAB-style matrix directly (not inside
+  // a nested bracket, abs value, etc.): there, whitespace between two operands
+  // separates columns instead of being ignored. See cellBoundary().
+  private splitSpaces = false;
 
   constructor(tokens: Token[]) {
     this.tokens = tokens;
@@ -186,7 +192,7 @@ class Parser {
 
   private parseAdd(): MathNode {
     let left = this.parseUnary();
-    while (this.isSymbol("+") || this.isSymbol("-")) {
+    while ((this.isSymbol("+") || this.isSymbol("-")) && !this.cellBoundary()) {
       const op = this.next().value as "+" | "-";
       const right = this.parseUnary();
       left = { kind: "Infix", op, left, right };
@@ -210,6 +216,7 @@ class Parser {
   private parseTerm(): MathNode {
     let left = this.parseFactor();
     while (true) {
+      if (this.cellBoundary()) break;
       if (this.isSymbol("*")) {
         this.next();
         const right = this.parseFactor();
@@ -276,6 +283,131 @@ class Parser {
     return left;
   }
 
+  // Runs `fn` with matrix column-splitting switched off — inside a nested
+  // bracket, abs value, set or angle group a space is just a space again.
+  private nested<T>(fn: () => T): T {
+    const previous = this.splitSpaces;
+    this.splitSpaces = false;
+    try {
+      return fn();
+    } finally {
+      this.splitSpaces = previous;
+    }
+  }
+
+  // Is the bracket at the current position (the opener) a matrix: is there a
+  // ";" at its top level before it closes?
+  private matrixAhead(): boolean {
+    let depth = 0;
+    for (let k = this.pos + 1; k < this.tokens.length; k++) {
+      const t = this.tokens[k];
+      if (t.type === "EOF") return false;
+      if (t.type !== "SYMBOL") continue;
+      if (t.value === "(" || t.value === "[" || t.value === "{") depth++;
+      else if (t.value === ")" || t.value === "]" || t.value === "}") {
+        if (depth === 0) return false;
+        depth--;
+      } else if (t.value === ";" && depth === 0) return true;
+    }
+    return false;
+  }
+
+  // MATLAB-style matrix: "[1 2 3; 4 5 6]" (-> bmatrix) or "(1 2; 3 4)" (->
+  // pmatrix). Rows are split by ";", columns by whitespace or ",". A trailing
+  // ";" is allowed, so "[1 2 3;]" is a one-row matrix.
+  private parseMatrix(): MathNode {
+    const open = this.next(); // "(" or "["
+    const rows: MathNode[][] = [[]];
+    const previous = this.splitSpaces;
+    this.splitSpaces = true;
+    try {
+      while (true) {
+        const t = this.peek();
+        if (t.type === "EOF") {
+          throw new MathSyntaxError(`Missing closing "${open.value === "[" ? "]" : ")"}"`, t.pos);
+        }
+        if (this.isSymbol("]") || this.isSymbol(")")) {
+          this.next();
+          break;
+        }
+        if (this.isSymbol(";")) {
+          this.next();
+          rows.push([]);
+          continue;
+        }
+        if (this.isSymbol(",")) {
+          this.next();
+          continue;
+        }
+        rows[rows.length - 1].push(this.parseAdd());
+      }
+    } finally {
+      this.splitSpaces = previous;
+    }
+    if (rows.length > 1 && rows[rows.length - 1].length === 0) rows.pop(); // trailing ";"
+    const columns = rows[0].length;
+    if (columns === 0 || rows.some((row) => row.length !== columns)) {
+      throw new MathSyntaxError(`Inconsistent matrix rows (expected ${columns} column(s) in every row)`, open.pos);
+    }
+    return { kind: "Matrix", rows, round: open.value === "(" };
+  }
+
+  // In a matrix cell list, does a column break fall between the previous token
+  // and the next one? MATLAB's rule: whitespace separates elements when an
+  // operand has just ended and another begins — "[a b]" is two, "[a + b]" one
+  // — and a sign hugging its operand after a space starts a new element:
+  // "[1 -2]" is two, "[1 - 2]" is a subtraction.
+  private cellBoundary(): boolean {
+    if (!this.splitSpaces) return false;
+    const next = this.peek();
+    const prev = this.tokens[this.pos - 1];
+    if (!next.spaceBefore || !prev || !this.endsOperand(prev)) return false;
+    if (this.startsOperand(next)) return true;
+    if (next.type === "SYMBOL" && (next.value === "-" || next.value === "+")) {
+      const after = this.peek(1);
+      return !!after && !after.spaceBefore && this.startsOperand(after);
+    }
+    return false;
+  }
+
+  // A symbol word that is an operand (a constant, "dots", an ordinary name), as
+  // opposed to an operator/relation word ("in", "cup", …), a function name
+  // or a structural keyword that still wants an argument.
+  private isOperandWord(word: string): boolean {
+    if (STRUCTURAL_KEYWORDS.has(word) || FUNCTION_NAME_SET.has(word)) return false;
+    return !(word in WORD_KEYWORDS) || OPERAND_LIKE_WORDS.has(word);
+  }
+
+  private endsOperand(t: Token): boolean {
+    switch (t.type) {
+      case "NUMBER":
+      case "LITERAL":
+      case "TEXT_LITERAL":
+        return true;
+      case "SYMBOL":
+        return t.value === ")" || t.value === "]" || t.value === "}" || t.value === "'" || t.value === "!";
+      case "IDENT":
+        return this.isOperandWord(t.value);
+      default:
+        return false;
+    }
+  }
+
+  private startsOperand(t: Token): boolean {
+    switch (t.type) {
+      case "NUMBER":
+      case "LITERAL":
+      case "TEXT_LITERAL":
+        return true;
+      case "SYMBOL":
+        return t.value === "(" || t.value === "[" || t.value === "{";
+      case "IDENT":
+        return !(t.value in WORD_KEYWORDS) || OPERAND_LIKE_WORDS.has(t.value);
+      default:
+        return false;
+    }
+  }
+
   // See the "<" branch in parseTerm: parses "<...>" as an angle group when it
   // is closed by ">" and not followed by another operand; otherwise restores
   // the parser's state and returns null so "<" is read as "less than".
@@ -289,7 +421,7 @@ class Parser {
       this.absDepth = absDepth;
     };
     try {
-      const group = this.parsePostfix(this.parseAngleGroup());
+      const group = this.parsePostfix(this.nested(() => this.parseAngleGroup()));
       if (this.operandFollows(this.peek())) {
         restore();
         return null;
@@ -386,15 +518,17 @@ class Parser {
     }
 
     if (t.type === "SYMBOL" && (t.value === "(" || t.value === "[")) {
-      return this.parseParenGroup();
+      // "[1 2; 3 4]" / "(1 2; 3 4)": a ";" at the top level of the brackets
+      // makes it a matrix literal; otherwise it's an ordinary bracket group.
+      return this.matrixAhead() ? this.parseMatrix() : this.nested(() => this.parseParenGroup());
     }
 
     if (t.type === "SYMBOL" && t.value === "|") {
-      return this.parseAbsoluteValue();
+      return this.nested(() => this.parseAbsoluteValue());
     }
 
     if (t.type === "SYMBOL" && t.value === "{") {
-      return this.parseBraceGroup();
+      return this.nested(() => this.parseBraceGroup());
     }
 
     // "<...>" (inner product / basis / generator notation, e.g. "<v1,v2>",
@@ -405,7 +539,7 @@ class Parser {
     // "<" after "x" is already a complete atom. So this is unambiguous:
     // no valid expression starts with a bare "<".
     if (t.type === "RELOP" && t.value === "<") {
-      return this.parseAngleGroup();
+      return this.nested(() => this.parseAngleGroup());
     }
 
     // Literal punctuation, e.g. "f: A mapsto B" (function signature colon).

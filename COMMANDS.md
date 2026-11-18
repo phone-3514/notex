@@ -214,6 +214,14 @@ Intentionally unsupported / ambiguous forms:
 | `<v> (inner product / span / generator notation)` | \langle v\rangle | `\langle v\rangle` | `<v>` |
 | `<u,v> (e.g. inner product of two vectors)` | \langle u,v\rangle | `\langle u,v\rangle` | `<u,v>` |
 
+## Matrices
+
+| Command | Result | LaTeX | Example |
+| --- | --- | --- | --- |
+| `[1 2; 3 4] (MATLAB-style matrix: ; = new row, space or , = new column)` | \begin{bmatrix}1 & 2 & 3\\4 & 5 & 6\end{bmatrix} | `\begin{bmatrix}1 & 2 & 3\\4 & 5 & 6\end{bmatrix}` | `[1 2 3; 4 5 6]` |
+| `(1 2; 3 4) (same, with round brackets)` | \begin{pmatrix}1 & 2\\3 & 4\end{pmatrix} | `\begin{pmatrix}1 & 2\\3 & 4\end{pmatrix}` | `(1 2; 3 4)` |
+| `[1 dots 1; vdots ddots vdots; 1 dots 1] (omission symbols in a matrix)` | \begin{bmatrix}1 & \dots & 1\\\vdots & \ddots & \vdots\\1 & \dots & 1\end{bmatrix} | `\begin{bmatrix}1 & \dots & 1\\\vdots & \ddots & \vdots\\1 & \dots & 1\end{bmatrix}` | `[1 dots 1; vdots ddots vdots; 1 dots 1]` |
+
 ## Accents
 
 | Command | Result | LaTeX | Example |

@@ -141,7 +141,7 @@ function highlightMath(out: Span[], text: string, base = "hl-math") {
       push(out, ch, "hl-op");
     } else if (ch === "^" || ch === "_") {
       push(out, ch, "hl-sub");
-    } else if ("(){}[],:|'!".includes(ch)) {
+    } else if ("(){}[],;:|'!".includes(ch)) {
       push(out, ch, "hl-punc");
     } else {
       push(out, ch, base);

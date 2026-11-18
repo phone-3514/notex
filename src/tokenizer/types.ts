@@ -13,6 +13,11 @@ export interface Token {
   type: TokenType;
   value: string;
   pos: number;
+  // Set (only when true) if whitespace came right before this token in the
+  // source. Whitespace is otherwise insignificant to the grammar; the one
+  // place that reads it is a MATLAB-style matrix "[1 2; 3 4]", where a space
+  // separates columns.
+  spaceBefore?: true;
 }
 
 export class MathSyntaxError extends Error {

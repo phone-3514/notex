@@ -186,7 +186,7 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
-    if ("(){}[]^_+-*/,!|:'".includes(ch)) {
+    if ("(){}[]^_+-*/,;!|:'".includes(ch)) {
       tokens.push({ type: "SYMBOL", value: ch, pos: i });
       i++;
       continue;
@@ -207,5 +207,10 @@ export function tokenize(input: string): Token[] {
   }
 
   tokens.push({ type: "EOF", value: "", pos: n });
+  // Record which tokens had whitespace right before them (a token's `pos` is
+  // its first character, so this is just a look at the preceding character).
+  for (const token of tokens) {
+    if (token.pos > 0 && /\s/.test(input[token.pos - 1])) token.spaceBefore = true;
+  }
   return tokens;
 }
