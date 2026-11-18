@@ -24,6 +24,7 @@ import { isComposingInput } from "@/editor/composition";
 import { getCaretCoordinates } from "@/editor/caretCoordinates";
 import { lineNumberAt } from "@/editor/cursorLine";
 import { highlightToHtml } from "@/editor/highlight";
+import { UndoHistory } from "@/editor/undoHistory";
 import AutocompleteMenu from "./AutocompleteMenu";
 
 interface EditorProps {
@@ -49,12 +50,48 @@ interface MenuState {
 const WORD_RE = /[A-Za-z]+$/;
 // A note-snippet trigger: ";" followed by letters, immediately before the cursor.
 const NOTE_TRIGGER_RE = /;[a-zA-Z]*$/;
+// Where the editor's undo steps are saved (see saveHistory).
+const UNDO_STORAGE_KEY = "mathnote:undo";
 
 export default function Editor({ value, onChange, onCursorLineChange }: EditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLPreElement>(null);
   const composingRef = useRef(false);
   const [menu, setMenu] = useState<MenuState | null>(null);
+
+  // Undo/redo: the editor keeps its own history (see editor/undoHistory.ts)
+  // instead of the browser's, which programmatic edits wipe. `lastValueRef` is
+  // the document as the history last saw it, so each change can be recorded as
+  // a patch from it; `compositionStartRef` is the text before an IME
+  // composition began, so a whole composition is one step.
+  const historyRef = useRef<UndoHistory>(new UndoHistory());
+  const lastValueRef = useRef(value);
+  const compositionStartRef = useRef<string | null>(null);
+  const saveTimerRef = useRef<number | undefined>(undefined);
+
+  // Saves the undo steps (debounced) so they survive a reload; they're only
+  // reused if the saved note text is still the document they end at.
+  const saveHistory = useCallback(() => {
+    try {
+      window.localStorage.setItem(UNDO_STORAGE_KEY, historyRef.current.serialize(lastValueRef.current));
+    } catch {
+      // Storage full or unavailable: undo still works for this session.
+    }
+  }, []);
+  const scheduleHistorySave = useCallback(() => {
+    window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(saveHistory, 600);
+  }, [saveHistory]);
+
+  // Records the document changing from the last seen value to `next`.
+  const recordChange = useCallback(
+    (next: string, sealed: boolean) => {
+      historyRef.current.record(lastValueRef.current, next, { sealed });
+      lastValueRef.current = next;
+      scheduleHistorySave();
+    },
+    [scheduleHistorySave]
+  );
 
   // The colour layer: the same text, drawn in syntax colours underneath the
   // (transparent-text) textarea. A trailing zero-width space keeps a final
@@ -90,6 +127,7 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
   // normal typing).
   const commit = useCallback(
     (state: TextState) => {
+      recordChange(state.value, true);
       onChange(state.value);
       const el = textareaRef.current;
       if (el) {
@@ -98,8 +136,72 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
       }
       onCursorLineChange?.(lineNumberAt(state.value, state.selectionStart));
     },
-    [onChange, onCursorLineChange]
+    [onChange, onCursorLineChange, recordChange]
   );
+
+  // Steps the editor's own history back/forward (Cmd/Ctrl+Z, Shift+Cmd/Ctrl+Z).
+  const stepHistory = useCallback(
+    (direction: "undo" | "redo") => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const result = direction === "undo" ? historyRef.current.undo(el.value) : historyRef.current.redo(el.value);
+      if (!result) return;
+      lastValueRef.current = result.value;
+      onChange(result.value);
+      el.value = result.value;
+      el.setSelectionRange(result.caret, result.caret);
+      onCursorLineChange?.(lineNumberAt(result.value, result.caret));
+      setMenu(null);
+      scheduleHistorySave();
+    },
+    [onChange, onCursorLineChange, scheduleHistorySave]
+  );
+
+  // Restore the saved history once, at mount, if it belongs to this document.
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = window.localStorage.getItem(UNDO_STORAGE_KEY);
+    } catch {
+      saved = null;
+    }
+    historyRef.current = UndoHistory.restore(saved, value);
+    lastValueRef.current = value;
+    // Mount only: later changes of `value` are handled by the effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The document changed from outside the textarea (e.g. a figure was saved
+  // from the figure editor): make that its own undo step too.
+  useEffect(() => {
+    if (value !== lastValueRef.current) recordChange(value, true);
+  }, [value, recordChange]);
+
+  // Route the browser's own undo/redo requests (Edit menu, context menu) here,
+  // and flush the saved history if the page is closing.
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const onBeforeInput = (e: InputEvent) => {
+      if (e.inputType === "historyUndo") {
+        e.preventDefault();
+        stepHistory("undo");
+      } else if (e.inputType === "historyRedo") {
+        e.preventDefault();
+        stepHistory("redo");
+      }
+    };
+    const flush = () => {
+      window.clearTimeout(saveTimerRef.current);
+      saveHistory();
+    };
+    el.addEventListener("beforeinput", onBeforeInput);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      el.removeEventListener("beforeinput", onBeforeInput);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [stepHistory, saveHistory]);
 
   const updateAutocomplete = useCallback((el: HTMLTextAreaElement) => {
     if (composingRef.current) return;
@@ -193,6 +295,19 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
       if (isComposingInput(composingRef.current, e.nativeEvent)) return;
       const el = e.currentTarget;
 
+      // Undo / redo from the editor's own history.
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && !e.altKey && (e.key === "z" || e.key === "Z")) {
+        e.preventDefault();
+        stepHistory(e.shiftKey ? "redo" : "undo");
+        return;
+      }
+      if (mod && !e.altKey && !e.shiftKey && (e.key === "y" || e.key === "Y")) {
+        e.preventDefault();
+        stepHistory("redo");
+        return;
+      }
+
       if (menu) {
         if (e.key === "ArrowDown") {
           e.preventDefault();
@@ -245,29 +360,41 @@ export default function Editor({ value, onChange, onCursorLineChange }: EditorPr
         return;
       }
     },
-    [menu, applySnippet, tryExpandNoteSnippet, applyIndentEdit, commit]
+    [menu, applySnippet, tryExpandNoteSnippet, applyIndentEdit, commit, stepHistory]
   );
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
+      // During an IME composition the text changes with every keystroke; the
+      // whole composition is recorded as one step when it ends.
+      if (composingRef.current) lastValueRef.current = e.target.value;
+      else recordChange(e.target.value, false);
       onChange(e.target.value);
       updateAutocomplete(e.currentTarget);
       onCursorLineChange?.(lineNumberAt(e.target.value, e.currentTarget.selectionStart));
     },
-    [onChange, updateAutocomplete, onCursorLineChange]
+    [onChange, updateAutocomplete, onCursorLineChange, recordChange]
   );
 
   const handleCompositionStart = useCallback(() => {
     composingRef.current = true;
+    compositionStartRef.current = lastValueRef.current;
     setMenu(null);
   }, []);
 
   const handleCompositionEnd = useCallback(
     (e: CompositionEvent<HTMLTextAreaElement>) => {
       composingRef.current = false;
+      const start = compositionStartRef.current;
+      compositionStartRef.current = null;
+      if (start !== null && start !== e.currentTarget.value) {
+        historyRef.current.record(start, e.currentTarget.value, { sealed: false });
+        lastValueRef.current = e.currentTarget.value;
+        scheduleHistorySave();
+      }
       updateAutocomplete(e.currentTarget);
     },
-    [updateAutocomplete]
+    [updateAutocomplete, scheduleHistorySave]
   );
 
   return (
